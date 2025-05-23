@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/homeFragment">
+
+    <fragment
+        android:id="@+id/homeFragment"
+        android:name="com.silvianikikarim.studentassistant.ui.HomeFragment"
+        android:label="HomeFragment" >
+
+        <action
+            android:id="@+id/action_homeFragment_to_orarioFragment2"
+            app:destination="@id/orarioFragment2" />
+
+        <action
+            android:id="@+id/action_homeFragment_to_calendarioFragment"
+            app:destination="@id/calendarioFragment" />
+
+        <action
+            android:id="@+id/action_homeFragment_to_appuntiFragment"
+            app:destination="@id/appuntiFragment" />
+
+        <action
+            android:id="@+id/action_homeFragment_to_andamentoFragment"
+            app:destination="@id/andamentoFragment" />
+
+        <action
+            android:id="@+id/action_homeFragment_to_consigliFragment"
+            app:destination="@id/consigliFragment" />
+
+        <action
+            android:id="@+id/action_homeFragment_to_impostazioniFragment"
+            app:destination="@id/impostazioniFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/orarioFragment2"
+        android:name="com.silvianikikarim.studentassistant.OrarioFragment"
+        android:label="OrarioFragment" />
+
+    <fragment
+        android:id="@+id/calendarioFragment"
+        android:name="com.silvianikikarim.studentassistant.ui.CalendarioFragment"
+        android:label="CalendarioFragment" />
+
+    <fragment
+        android:id="@+id/appuntiFragment"
+        android:name="com.silvianikikarim.studentassistant.ui.AppuntiFragment"
+        android:label="AppuntiFragment" />
+
+    <fragment
+        android:id="@+id/andamentoFragment"
+        android:name="com.silvianikikarim.studentassistant.ui.AndamentoFragment"
+        android:label="AndamentoFragment" />
+
+    <fragment
+        android:id="@+id/consigliFragment"
+        android:name="com.silvianikikarim.studentassistant.ui.ConsigliFragment"
+        android:label="ConsigliFragment" />
+
+    <fragment
+        android:id="@+id/impostazioniFragment"
+        android:name="com.silvianikikarim.studentassistant.ui.ImpostazioniFragment"
+        android:label="ImpostazioniFragment" />
+
+</navigation>

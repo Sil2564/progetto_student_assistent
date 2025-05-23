@@ -36,7 +36,9 @@ android {
     }
     buildFeatures {
         compose = true
+        viewBinding = true // 👈 AGGIUNGI QUESTA RIGA
     }
+
 }
 
 dependencies {
@@ -56,4 +58,7 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+    implementation("androidx.fragment:fragment-ktx:1.6.2")
+    implementation("androidx.navigation:navigation-fragment-ktx:2.7.7")
+    implementation("androidx.navigation:navigation-ui-ktx:2.7.7")
 }
