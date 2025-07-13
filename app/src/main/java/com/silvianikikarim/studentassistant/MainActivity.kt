@@ -3,45 +3,44 @@ package com.silvianikikarim.studentassistant
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.*
+import com.silvianikikarim.studentassistant.ui.HomeScreen
+import com.silvianikikarim.studentassistant.ui.AppuntiScreen
+import com.silvianikikarim.studentassistant.ui.OrarioScreen
+import com.silvianikikarim.studentassistant.ui.CalendarioScreen
+import com.silvianikikarim.studentassistant.ui.AndamentoScreen
+import com.silvianikikarim.studentassistant.ui.ConsigliScreen
+import com.silvianikikarim.studentassistant.ui.ImpostazioniScreen
 import com.silvianikikarim.studentassistant.ui.theme.StudentAssistantTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
         setContent {
             StudentAssistantTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                }
+                val navController = rememberNavController()
+                NavHostApp(navController)
             }
         }
     }
 }
 
 @Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
+fun NavHostApp(navController: NavHostController) {
+    NavHost(navController = navController, startDestination = "home") {
+        composable("home") { HomeScreen(navController) }
+        composable("orario") { OrarioScreen() }
+        composable("appunti") { AppuntiScreen() }
+        composable("calendario") { CalendarioScreen() }
+        composable("andamento") { AndamentoScreen() }
+        composable("consigli") { ConsigliScreen() }
+        composable("impostazioni") { ImpostazioniScreen() }
 
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    StudentAssistantTheme {
-        Greeting("Android")
     }
 }

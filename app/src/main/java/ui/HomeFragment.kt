@@ -27,12 +27,12 @@ class HomeFragment : Fragment() {
             navController.navigate(R.id.action_homeFragment_to_orarioFragment2)
         }
 
-        view.findViewById<Button>(R.id.btnCalendario).setOnClickListener {
-            navController.navigate(R.id.action_homeFragment_to_calendarioFragment)
-        }
-
         view.findViewById<Button>(R.id.btnAppunti).setOnClickListener {
             navController.navigate(R.id.action_homeFragment_to_appuntiFragment)
+        }
+
+        view.findViewById<Button>(R.id.btnCalendario).setOnClickListener {
+            navController.navigate(R.id.action_homeFragment_to_calendarioFragment)
         }
 
         view.findViewById<Button>(R.id.btnVoti).setOnClickListener {
