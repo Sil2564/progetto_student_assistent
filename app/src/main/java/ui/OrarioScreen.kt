@@ -1,3 +1,5 @@
+package com.silvianikikarim.studentassistant.ui
+
 import android.os.Bundle
 import android.view.ViewGroup
 import android.webkit.WebView
