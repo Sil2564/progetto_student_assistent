@@ -11,13 +11,36 @@ import com.silvianikikarim.studentassistant.viewmodel.VotoViewModel
 fun AppNavigation(votoViewModel: VotoViewModel) {
     val navController = rememberNavController()
 
-    NavHost(navController = navController, startDestination = "home") {
-        composable("home") { HomeScreen(navController) }
-        composable("orario") { OrarioScreen() }
-        composable("appunti") { AppuntiScreen() }
-        composable("calendario") { CalendarioScreen() }
-        composable("andamento") { AndamentoScreen(votoViewModel) } // ✅ qui usi il ViewModel
-        composable("consigli") { ConsigliScreen() }
-        composable("impostazioni") { ImpostazioniScreen() }
+    NavHost(
+        navController = navController,
+        startDestination = Routes.HOME
+    ) {
+        composable(Routes.HOME) {
+            HomeScreen(navController)
+        }
+
+        composable(Routes.ORARIO) {
+            OrarioScreen()
+        }
+
+        composable(Routes.APPUNTI) {
+            AppuntiScreen()
+        }
+
+        composable(Routes.CALENDARIO_STUDIO) {
+            CalendarioStudioScreen()
+        }
+
+        composable(Routes.ANDAMENTO) {
+            AndamentoScreen(votoViewModel)
+        }
+
+        composable(Routes.CONSIGLI) {
+            ConsigliScreen()
+        }
+
+        composable(Routes.IMPOSTAZIONI) {
+            ImpostazioniScreen()
+        }
     }
 }
