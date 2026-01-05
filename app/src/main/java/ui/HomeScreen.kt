@@ -41,7 +41,7 @@ fun HomeScreen(navController: NavController) {
                     )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF8E44AD), // viola simile UniBo-style
+                    containerColor = Color(0xFFAF2A2D), // viola simile UniBo-style
                     titleContentColor = Color.White
                 )
             )
