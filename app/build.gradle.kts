@@ -2,7 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-    kotlin("kapt") // 👈 Aggiunto per usare Room
+    kotlin("kapt") //
 }
 
 android {
@@ -31,6 +31,8 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
+        isCoreLibraryDesugaringEnabled = true
+
     }
     kotlinOptions {
         jvmTarget = "11"
@@ -59,9 +61,11 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
     implementation("androidx.navigation:navigation-compose:2.7.7")
     implementation("androidx.datastore:datastore-preferences:1.1.1")
+    implementation("androidx.compose.material:material-icons-extended")
 
 
-    // 📦 ROOM
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
+
     implementation("androidx.room:room-runtime:2.6.1")
     kapt("androidx.room:room-compiler:2.6.1")
     implementation("androidx.room:room-ktx:2.6.1")
