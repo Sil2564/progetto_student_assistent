@@ -21,10 +21,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.viewinterop.AndroidView
 
+/**
+ * OrarioScreen
+ * Displays a webpage showing lessons TimeTable from the Unibo WebSite.
+ * Direct WebView connection is actually an experiment; not ideal for a production environment.
+ */
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OrarioScreen(modifier: Modifier = Modifier) {
-    // Uploading the URL to view
+
     val url=
         "https://corsi.unibo.it/laurea/TecnologieSistemiInformatici/orario-lezioni?anno=3&curricula=C54-000"
 
@@ -44,7 +50,6 @@ fun OrarioScreen(modifier: Modifier = Modifier) {
                 .padding(innerPadding)
                 .fillMaxSize()
         ) {
-            // Calling the WebView created in the other file
             WebViewScreen(
                 url = url,
                 modifier = Modifier.fillMaxSize()
@@ -53,18 +58,13 @@ fun OrarioScreen(modifier: Modifier = Modifier) {
     }
 }
 
-// Main WebView Function
 @Composable
 fun WebViewScreen(url: String, modifier: Modifier = Modifier) {
-    // Configuring the Factory AndroidView for the function
     AndroidView(
         factory = { context ->
             WebView(context).apply {
-                // Setting up primary elements for the WebView
-                settings.javaScriptEnabled = true
                 webViewClient = WebViewClient()
 
-                //Enabling adaptive layout
                 layoutParams = ViewGroup.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT,
                     ViewGroup.LayoutParams.MATCH_PARENT
