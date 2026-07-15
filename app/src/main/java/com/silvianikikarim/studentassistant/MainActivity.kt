@@ -10,6 +10,10 @@ import com.silvianikikarim.studentassistant.ui.*
 import com.silvianikikarim.studentassistant.ui.theme.StudentAssistantTheme
 import com.silvianikikarim.studentassistant.viewmodel.VotoViewModel
 import com.silvianikikarim.studentassistant.viewmodel.VotoViewModelFactory
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import com.silvianikikarim.studentassistant.util.SettingsDataStore
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -18,9 +22,11 @@ class MainActivity : ComponentActivity() {
         val votoDao = VotoDatabase.getDatabase(applicationContext).votoDao()
         val repository = VotoRepository(votoDao)
         val factory = VotoViewModelFactory(repository)
+        val settingsDataStore = SettingsDataStore(applicationContext)
 
         setContent {
-            StudentAssistantTheme {
+            val darkMode by settingsDataStore.darkModeFlow.collectAsState(initial = isSystemInDarkTheme())
+            StudentAssistantTheme(darkTheme = darkMode) {
                 val votoViewModel: VotoViewModel = viewModel(factory = factory)
                 AppNavigation(votoViewModel = votoViewModel)
             }

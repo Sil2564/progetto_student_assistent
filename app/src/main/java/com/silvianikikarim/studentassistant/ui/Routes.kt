@@ -8,4 +8,10 @@ object Routes {
     const val ANDAMENTO = "andamento"
     const val CONSIGLI = "consigli"
     const val IMPOSTAZIONI = "impostazioni"
+    
+    // Sub-schermate Impostazioni
+    const val PROFILO = "profilo"
+    const val ESPORTA_DATI = "esporta_dati"
+    const val PRIVACY = "privacy"
+    const val INFO_APP = "info_app"
 }
