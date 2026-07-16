@@ -11,7 +11,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
-import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.navigation.NavController
 import androidx.compose.material3.*
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.*
@@ -30,7 +31,6 @@ import java.util.Locale
 import java.util.UUID
 
 private val BrandRed = Color(0xFFAF2A2D)
-private val SurfaceSoft = Color(0xFFF6F6F7)
 
 private data class StudyEvent(
     val id: String,
@@ -43,7 +43,7 @@ private data class StudyEvent(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CalendarioStudioScreen() {
+fun CalendarioStudioScreen(navController: NavController) {
     var shownMonth by remember { mutableStateOf(YearMonth.now()) }
     var selectedDate by remember { mutableStateOf(LocalDate.now()) }
 
@@ -96,13 +96,9 @@ fun CalendarioStudioScreen() {
         topBar = {
             TopAppBar(
                 title = { Text("Calendar", fontWeight = FontWeight.SemiBold) },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.White,
-                    titleContentColor = MaterialTheme.colorScheme.onSurface
-                ),
-                actions = {
-                    IconButton(onClick = { /* TODO menu */ }) {
-                        Icon(Icons.Filled.MoreVert, contentDescription = "Menu")
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Indietro")
                     }
                 }
             )
@@ -121,7 +117,7 @@ fun CalendarioStudioScreen() {
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize()
-                .background(Color.White)
+                .background(MaterialTheme.colorScheme.background)
                 .padding(horizontal = 16.dp)
         ) {
             Spacer(Modifier.height(8.dp))
@@ -136,7 +132,7 @@ fun CalendarioStudioScreen() {
 
             Card(
                 shape = RoundedCornerShape(18.dp),
-                colors = CardDefaults.cardColors(containerColor = SurfaceSoft),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)),
                 elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
@@ -440,7 +436,7 @@ private fun DayCell(
 private fun EventRowCard(event: StudyEvent) {
     Card(
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = SurfaceSoft),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -498,7 +494,7 @@ private fun EventRowCard(event: StudyEvent) {
 private fun EmptyEventsHint(onAdd: () -> Unit) {
     Card(
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = SurfaceSoft),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         modifier = Modifier.fillMaxWidth()
     ) {

@@ -23,23 +23,23 @@ fun AppNavigation(votoViewModel: VotoViewModel) {
         }
 
         composable(Routes.ORARIO) {
-            OrarioScreen()
+            OrarioScreen(navController)
         }
 
         composable(Routes.APPUNTI) {
-            AppuntiScreen()
+            AppuntiScreen(navController)
         }
 
         composable(Routes.CALENDARIO_STUDIO) {
-            CalendarioStudioScreen()
+            CalendarioStudioScreen(navController)
         }
 
         composable(Routes.ANDAMENTO) {
-            AndamentoScreen(votoViewModel)
+            AndamentoScreen(votoViewModel, navController)
         }
 
         composable(Routes.CONSIGLI) {
-            ConsigliScreen()
+            ConsigliScreen(navController)
         }
 
         composable(Routes.IMPOSTAZIONI) {
