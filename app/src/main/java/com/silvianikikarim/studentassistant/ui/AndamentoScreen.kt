@@ -11,10 +11,13 @@ import androidx.compose.ui.unit.dp
 import com.silvianikikarim.studentassistant.model.Voto
 import com.silvianikikarim.studentassistant.viewmodel.VotoViewModel
 import androidx.compose.runtime.collectAsState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.navigation.NavController
 
-
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AndamentoScreen(viewModel: VotoViewModel) {
+fun AndamentoScreen(viewModel: VotoViewModel, navController: NavController) {
     val listaVoti by viewModel.tuttiIVoti.collectAsState()
 
     var materia by remember { mutableStateOf(TextFieldValue("")) }
@@ -23,11 +26,24 @@ fun AndamentoScreen(viewModel: VotoViewModel) {
     var descrizione by remember { mutableStateOf(TextFieldValue("")) } // rinominato
     var note by remember { mutableStateOf(TextFieldValue("")) }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Andamento") },
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Indietro")
+                    }
+                }
+            )
+        }
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .padding(16.dp)
+        ) {
         Text(
             text = "I miei voti",
             style = MaterialTheme.typography.titleLarge,
@@ -116,6 +132,7 @@ fun AndamentoScreen(viewModel: VotoViewModel) {
                 .padding(top = 12.dp)
         ) {
             Text("Aggiungi voto")
+        }
         }
     }
 }

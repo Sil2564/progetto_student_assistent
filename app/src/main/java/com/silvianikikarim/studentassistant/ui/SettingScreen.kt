@@ -8,6 +8,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Notifications
@@ -34,6 +35,11 @@ fun SettingsScreen(
         topBar = {
             TopAppBar(
                 title = { Text("Impostazioni", fontWeight = FontWeight.Bold) },
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Indietro")
+                    }
+                },
                 actions = {
                     IconButton(onClick = { /* Notifiche placeholder */ }) {
                         Icon(Icons.Default.Notifications, contentDescription = "Notifiche")
