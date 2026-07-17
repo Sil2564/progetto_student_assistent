@@ -74,7 +74,11 @@ fun AppNavigation(
             val settingsViewModel: SettingsViewModel = viewModel(
                 factory = com.silvianikikarim.studentassistant.viewmodel.SettingsViewModelFactory(settingsDataStore)
             )
-            com.silvianikikarim.studentassistant.ui.settings.SettingsScreen(viewModel = settingsViewModel, navController = navController)
+            com.silvianikikarim.studentassistant.ui.settings.SettingsScreen(
+                settingsViewModel = settingsViewModel, 
+                votoViewModel = votoViewModel,
+                navController = navController
+            )
         }
 
         composable(Routes.PROFILO) { ProfiloScreen(navController) }

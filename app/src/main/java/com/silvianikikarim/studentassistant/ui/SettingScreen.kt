@@ -22,14 +22,24 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.silvianikikarim.studentassistant.ui.Routes
 import com.silvianikikarim.studentassistant.viewmodel.SettingsViewModel
+import com.silvianikikarim.studentassistant.viewmodel.VotoViewModel
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
-    viewModel: SettingsViewModel,
+    settingsViewModel: SettingsViewModel,
+    votoViewModel: VotoViewModel,
     navController: NavController
 ) {
-    val darkMode by viewModel.darkMode.collectAsState(initial = false)
+    val darkMode by settingsViewModel.darkMode.collectAsState(initial = false)
+    val voti by votoViewModel.tuttiIVoti.collectAsState()
+    
+    val esamiDati = voti.size
+    val mediaVoti = if (voti.isNotEmpty()) voti.map { it.voto }.average() else 0.0
+    val mediaFormat = String.format(Locale.US, "%.1f", mediaVoti)
+    // Se non ci sono i crediti nel modello Voto, facciamo una stima media di 6 CFU a esame
+    val crediti = voti.size * 6
 
     Scaffold(
         topBar = {
@@ -92,11 +102,11 @@ fun SettingsScreen(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                StatCard(title = "Esami Dati", value = "12", modifier = Modifier.weight(1f))
+                StatCard(title = "Esami Dati", value = esamiDati.toString(), modifier = Modifier.weight(1f))
                 Spacer(modifier = Modifier.width(8.dp))
-                StatCard(title = "Media Voti", value = "27.5", modifier = Modifier.weight(1f))
+                StatCard(title = "Media Voti", value = mediaFormat, modifier = Modifier.weight(1f))
                 Spacer(modifier = Modifier.width(8.dp))
-                StatCard(title = "Crediti", value = "60", modifier = Modifier.weight(1f))
+                StatCard(title = "Crediti", value = crediti.toString(), modifier = Modifier.weight(1f))
             }
 
             // Lista Voci Impostazioni
@@ -127,7 +137,7 @@ fun SettingsScreen(
                         )
                         Switch(
                             checked = darkMode,
-                            onCheckedChange = { viewModel.toggleDarkMode(it) }
+                            onCheckedChange = { settingsViewModel.toggleDarkMode(it) }
                         )
                     }
                     
