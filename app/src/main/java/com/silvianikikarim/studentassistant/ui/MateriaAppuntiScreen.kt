@@ -9,16 +9,20 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Article
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Image
+import androidx.compose.material.icons.filled.NoteAdd
 import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.PictureAsPdf
@@ -26,8 +30,11 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.core.content.ContextCompat
@@ -35,6 +42,8 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.silvianikikarim.studentassistant.model.Nota
 import com.silvianikikarim.studentassistant.model.TipoNota
+import com.silvianikikarim.studentassistant.ui.theme.BrandRed
+import com.silvianikikarim.studentassistant.ui.theme.SurfaceSoft
 import com.silvianikikarim.studentassistant.util.FileStorageHelper
 import com.silvianikikarim.studentassistant.viewmodel.AppuntiViewModel
 import java.io.File
@@ -144,45 +153,65 @@ fun MateriaAppuntiScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(nomeMateria) },
+                title = { Text(nomeMateria, fontWeight = FontWeight.SemiBold) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Indietro")
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.White,
+                    titleContentColor = MaterialTheme.colorScheme.onSurface
+                )
             )
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = { mostraBottomSheet = true }) {
+            FloatingActionButton(
+                containerColor = BrandRed,
+                contentColor = Color.White,
+                onClick = { mostraBottomSheet = true }
+            ) {
                 Icon(Icons.Default.Add, contentDescription = "Aggiungi appunto")
             }
         }
     ) { padding ->
-        if (note.isEmpty()) {
-            Box(
-                modifier = Modifier.fillMaxSize().padding(padding),
-                contentAlignment = Alignment.Center
-            ) {
-                Text("Nessun appunto. Tocca + per aggiungerne uno.")
-            }
-        } else {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize().padding(padding),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                items(note, key = { it.id }) { nota ->
-                    NotaRow(
-                        nota = nota,
-                        onClick = {
-                            when (nota.tipo) {
-                                TipoNota.TESTO -> navController.navigate(Routes.appuntiNota(materiaId, nota.id))
-                                TipoNota.IMMAGINE -> notaImmagineDaVisualizzare = nota
-                                TipoNota.PDF -> apriPdfEsterno(context, nota)
-                            }
-                        },
-                        onLongClick = { notaSelezionataPerMenu = nota }
-                    )
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.White)
+                .padding(padding)
+                .padding(horizontal = 16.dp)
+        ) {
+            Spacer(Modifier.height(8.dp))
+
+            Text(
+                text = "${note.size} " + if (note.size == 1) "Appunto" else "Appunti",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            Spacer(Modifier.height(12.dp))
+
+            if (note.isEmpty()) {
+                EmptyNoteHint(onAdd = { mostraBottomSheet = true })
+            } else {
+                LazyColumn(
+                    contentPadding = PaddingValues(bottom = 96.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    items(note, key = { it.id }) { nota ->
+                        NotaRow(
+                            nota = nota,
+                            onClick = {
+                                when (nota.tipo) {
+                                    TipoNota.TESTO -> navController.navigate(Routes.appuntiNota(materiaId, nota.id))
+                                    TipoNota.IMMAGINE -> notaImmagineDaVisualizzare = nota
+                                    TipoNota.PDF -> apriPdfEsterno(context, nota)
+                                }
+                            },
+                            onLongClick = { notaSelezionataPerMenu = nota }
+                        )
+                    }
                 }
             }
         }
@@ -247,13 +276,16 @@ private fun NotaRow(
     onClick: () -> Unit,
     onLongClick: () -> Unit
 ) {
-    ElevatedCard(
+    Card(
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = SurfaceSoft),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         modifier = Modifier
             .fillMaxWidth()
             .combinedClickable(onClick = onClick, onLongClick = onLongClick)
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+            modifier = Modifier.padding(14.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             val icona = when (nota.tipo) {
@@ -261,16 +293,80 @@ private fun NotaRow(
                 TipoNota.IMMAGINE -> Icons.Default.Image
                 TipoNota.PDF -> Icons.Default.PictureAsPdf
             }
-            Icon(icona, contentDescription = null)
+            val etichettaTipo = when (nota.tipo) {
+                TipoNota.TESTO -> "Testo"
+                TipoNota.IMMAGINE -> "Immagine"
+                TipoNota.PDF -> "PDF"
+            }
+
+            Box(
+                modifier = Modifier
+                    .size(44.dp)
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(BrandRed.copy(alpha = 0.10f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(icona, contentDescription = null, tint = BrandRed)
+            }
+
             Spacer(Modifier.width(12.dp))
+
             Column(Modifier.weight(1f)) {
-                Text(nota.titolo, style = MaterialTheme.typography.titleMedium)
+                Text(nota.titolo, fontWeight = FontWeight.SemiBold)
+                Spacer(Modifier.height(4.dp))
                 Text(
                     formattaData(nota.dataModifica),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
+
+            AssistChip(
+                onClick = { },
+                label = { Text(etichettaTipo) },
+                colors = AssistChipDefaults.assistChipColors(
+                    containerColor = BrandRed.copy(alpha = 0.10f),
+                    labelColor = BrandRed
+                ),
+                border = null
+            )
+        }
+    }
+}
+
+@Composable
+private fun EmptyNoteHint(onAdd: () -> Unit) {
+    Card(
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = SurfaceSoft),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(
+            modifier = Modifier
+                .padding(20.dp)
+                .fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(56.dp)
+                    .clip(CircleShape)
+                    .background(BrandRed.copy(alpha = 0.10f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(Icons.Default.NoteAdd, contentDescription = null, tint = BrandRed)
+            }
+            Spacer(Modifier.height(12.dp))
+            Text("Nessun appunto per questa materia.", fontWeight = FontWeight.SemiBold)
+            Spacer(Modifier.height(6.dp))
+            Text(
+                "Tocca + per aggiungere una nota di testo, una foto o un PDF.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(Modifier.height(10.dp))
+            TextButton(onClick = onAdd) { Text("Aggiungi appunto", color = BrandRed) }
         }
     }
 }
@@ -284,11 +380,15 @@ private fun BottomSheetAggiungiAppunto(
     onFotocamera: () -> Unit,
     onPdf: () -> Unit
 ) {
-    ModalBottomSheet(onDismissRequest = onDismiss) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        containerColor = Color.White
+    ) {
         Column(modifier = Modifier.padding(bottom = 24.dp)) {
             Text(
                 "Aggiungi appunto",
                 style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
             )
             OpzioneBottomSheet(Icons.AutoMirrored.Filled.Article, "Nota di testo", onTesto)
@@ -308,7 +408,15 @@ private fun OpzioneBottomSheet(icon: ImageVector, testo: String, onClick: () -> 
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(icon, contentDescription = null)
+        Box(
+            modifier = Modifier
+                .size(36.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .background(BrandRed.copy(alpha = 0.10f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(icon, contentDescription = null, tint = BrandRed, modifier = Modifier.size(20.dp))
+        }
         Spacer(Modifier.width(16.dp))
         Text(testo)
     }
@@ -327,7 +435,7 @@ private fun MenuContestualeNota(
         text = { Text("Cosa vuoi fare con questo appunto?") },
         confirmButton = {
             if (nota.tipo == TipoNota.TESTO) {
-                TextButton(onClick = onModifica) { Text("Modifica") }
+                TextButton(onClick = onModifica) { Text("Modifica", color = BrandRed) }
             }
         },
         dismissButton = {

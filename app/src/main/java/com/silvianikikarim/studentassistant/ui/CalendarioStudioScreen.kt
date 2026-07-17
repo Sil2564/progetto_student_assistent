@@ -22,15 +22,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.silvianikikarim.studentassistant.ui.theme.BrandRed
+import com.silvianikikarim.studentassistant.ui.theme.SurfaceSoft
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.TextStyle
 import java.util.Locale
 import java.util.UUID
-
-private val BrandRed = Color(0xFFAF2A2D)
-private val SurfaceSoft = Color(0xFFF6F6F7)
 
 private data class StudyEvent(
     val id: String,
