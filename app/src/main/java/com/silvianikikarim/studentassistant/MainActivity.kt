@@ -4,10 +4,14 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.silvianikikarim.studentassistant.model.AppuntiDatabase
 import com.silvianikikarim.studentassistant.model.VotoDatabase
+import com.silvianikikarim.studentassistant.repository.AppuntiRepository
 import com.silvianikikarim.studentassistant.repository.VotoRepository
 import com.silvianikikarim.studentassistant.ui.*
 import com.silvianikikarim.studentassistant.ui.theme.StudentAssistantTheme
+import com.silvianikikarim.studentassistant.viewmodel.AppuntiViewModel
+import com.silvianikikarim.studentassistant.viewmodel.AppuntiViewModelFactory
 import com.silvianikikarim.studentassistant.viewmodel.VotoViewModel
 import com.silvianikikarim.studentassistant.viewmodel.VotoViewModelFactory
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -20,15 +24,27 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         val votoDao = VotoDatabase.getDatabase(applicationContext).votoDao()
-        val repository = VotoRepository(votoDao)
-        val factory = VotoViewModelFactory(repository)
+        val votoRepository = VotoRepository(votoDao)
+        val votoFactory = VotoViewModelFactory(votoRepository)
+
+        val appuntiDatabase = AppuntiDatabase.getDatabase(applicationContext)
+        val appuntiRepository = AppuntiRepository(
+            materiaDao = appuntiDatabase.materiaDao(),
+            notaDao = appuntiDatabase.notaDao()
+        )
+        val appuntiFactory = AppuntiViewModelFactory(appuntiRepository)
+
         val settingsDataStore = SettingsDataStore(applicationContext)
 
         setContent {
             val darkMode by settingsDataStore.darkModeFlow.collectAsState(initial = isSystemInDarkTheme())
             StudentAssistantTheme(darkTheme = darkMode) {
-                val votoViewModel: VotoViewModel = viewModel(factory = factory)
-                AppNavigation(votoViewModel = votoViewModel)
+                val votoViewModel: VotoViewModel = viewModel(factory = votoFactory)
+                val appuntiViewModel: AppuntiViewModel = viewModel(factory = appuntiFactory)
+                AppNavigation(
+                    votoViewModel = votoViewModel,
+                    appuntiViewModel = appuntiViewModel
+                )
             }
         }
     }
