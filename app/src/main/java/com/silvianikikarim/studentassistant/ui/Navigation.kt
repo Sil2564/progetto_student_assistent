@@ -78,8 +78,17 @@ fun AppNavigation(
         }
 
         composable(Routes.IMPOSTAZIONI) {
-            val settingsViewModel: SettingsViewModel = viewModel()
-            SettingsScreen(viewModel = settingsViewModel)
+            val context = androidx.compose.ui.platform.LocalContext.current
+            val settingsDataStore = com.silvianikikarim.studentassistant.util.SettingsDataStore(context)
+            val settingsViewModel: SettingsViewModel = viewModel(
+                factory = com.silvianikikarim.studentassistant.viewmodel.SettingsViewModelFactory(settingsDataStore)
+            )
+            com.silvianikikarim.studentassistant.ui.settings.SettingsScreen(viewModel = settingsViewModel, navController = navController)
         }
+
+        composable(Routes.PROFILO) { ProfiloScreen(navController) }
+        composable(Routes.ESPORTA_DATI) { EsportaDatiScreen(navController) }
+        composable(Routes.PRIVACY) { PrivacyScreen(navController) }
+        composable(Routes.INFO_APP) { InfoAppScreen(navController) }
     }
 }

@@ -76,18 +76,23 @@ fun HomeCard(
             .fillMaxWidth()
             .aspectRatio(1f)
             .clickable { onClick() },
-        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(MaterialTheme.colorScheme.surface),
+                .padding(8.dp),
             contentAlignment = Alignment.Center
         ) {
             Text(
                 text = title,
                 fontSize = 16.sp,
-                fontWeight = FontWeight.Medium
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center
             )
         }
     }

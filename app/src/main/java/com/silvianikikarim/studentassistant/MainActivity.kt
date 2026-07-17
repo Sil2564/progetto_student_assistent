@@ -14,6 +14,10 @@ import com.silvianikikarim.studentassistant.viewmodel.AppuntiViewModel
 import com.silvianikikarim.studentassistant.viewmodel.AppuntiViewModelFactory
 import com.silvianikikarim.studentassistant.viewmodel.VotoViewModel
 import com.silvianikikarim.studentassistant.viewmodel.VotoViewModelFactory
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import com.silvianikikarim.studentassistant.util.SettingsDataStore
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -30,8 +34,11 @@ class MainActivity : ComponentActivity() {
         )
         val appuntiFactory = AppuntiViewModelFactory(appuntiRepository)
 
+        val settingsDataStore = SettingsDataStore(applicationContext)
+
         setContent {
-            StudentAssistantTheme {
+            val darkMode by settingsDataStore.darkModeFlow.collectAsState(initial = isSystemInDarkTheme())
+            StudentAssistantTheme(darkTheme = darkMode) {
                 val votoViewModel: VotoViewModel = viewModel(factory = votoFactory)
                 val appuntiViewModel: AppuntiViewModel = viewModel(factory = appuntiFactory)
                 AppNavigation(

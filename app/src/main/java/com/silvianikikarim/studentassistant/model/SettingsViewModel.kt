@@ -17,3 +17,13 @@ class SettingsViewModel(
         }
     }
 }
+
+class SettingsViewModelFactory(private val dataStore: SettingsDataStore) : androidx.lifecycle.ViewModelProvider.Factory {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(SettingsViewModel::class.java)) {
+            @Suppress("UNCHECKED_CAST")
+            return SettingsViewModel(dataStore) as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class")
+    }
+}

@@ -22,4 +22,10 @@ object Routes {
 
     fun appuntiNota(materiaId: Long, notaId: Long = NOTA_ID_NUOVA) =
         "appunti/$materiaId/nota/$notaId"
+
+    // Sub-schermate Impostazioni
+    const val PROFILO = "profilo"
+    const val ESPORTA_DATI = "esporta_dati"
+    const val PRIVACY = "privacy"
+    const val INFO_APP = "info_app"
 }
