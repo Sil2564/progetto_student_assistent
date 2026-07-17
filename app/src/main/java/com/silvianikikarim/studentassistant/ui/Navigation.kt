@@ -1,16 +1,22 @@
 package com.silvianikikarim.studentassistant.ui
 
 import androidx.compose.runtime.Composable
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.silvianikikarim.studentassistant.viewmodel.VotoViewModel
-import com.silvianikikarim.studentassistant.viewmodel.SettingsViewModel
+import androidx.navigation.navArgument
 import com.silvianikikarim.studentassistant.ui.settings.SettingsScreen
+import com.silvianikikarim.studentassistant.viewmodel.AppuntiViewModel
+import com.silvianikikarim.studentassistant.viewmodel.SettingsViewModel
+import com.silvianikikarim.studentassistant.viewmodel.VotoViewModel
 
 @Composable
-fun AppNavigation(votoViewModel: VotoViewModel) {
+fun AppNavigation(
+    votoViewModel: VotoViewModel,
+    appuntiViewModel: AppuntiViewModel
+) {
     val navController = rememberNavController()
 
     NavHost(
@@ -27,7 +33,36 @@ fun AppNavigation(votoViewModel: VotoViewModel) {
         }
 
         composable(Routes.APPUNTI) {
-            AppuntiScreen()
+            AppuntiScreen(navController = navController, appuntiViewModel = appuntiViewModel)
+        }
+
+        composable(
+            route = Routes.APPUNTI_MATERIA,
+            arguments = listOf(navArgument("materiaId") { type = NavType.LongType })
+        ) { backStackEntry ->
+            val materiaId = backStackEntry.arguments?.getLong("materiaId") ?: 0L
+            MateriaAppuntiScreen(
+                materiaId = materiaId,
+                navController = navController,
+                appuntiViewModel = appuntiViewModel
+            )
+        }
+
+        composable(
+            route = Routes.APPUNTI_NOTA,
+            arguments = listOf(
+                navArgument("materiaId") { type = NavType.LongType },
+                navArgument("notaId") { type = NavType.LongType }
+            )
+        ) { backStackEntry ->
+            val materiaId = backStackEntry.arguments?.getLong("materiaId") ?: 0L
+            val notaId = backStackEntry.arguments?.getLong("notaId") ?: 0L
+            NotaTestoEditorScreen(
+                materiaId = materiaId,
+                notaId = notaId,
+                navController = navController,
+                appuntiViewModel = appuntiViewModel
+            )
         }
 
         composable(Routes.CALENDARIO_STUDIO) {
