@@ -25,6 +25,11 @@ import com.silvianikikarim.studentassistant.viewmodel.SettingsViewModel
 import com.silvianikikarim.studentassistant.viewmodel.VotoViewModel
 import java.util.Locale
 
+/**
+ * SettingsScreen
+ * Schermata dedicata alle impostazioni dell'utente e alla visualizzazione del riepilogo dati (statistiche).
+ * Riceve in input i ViewModel per accedere ai dati salvati e alle preferenze (es. Dark Mode).
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
@@ -32,13 +37,22 @@ fun SettingsScreen(
     votoViewModel: VotoViewModel,
     navController: NavController
 ) {
+    // Usiamo collectAsState per "osservare" in tempo reale i cambiamenti.
+    // Se cambia il tema o viene aggiunto un nuovo voto nel DB, la UI si aggiorna da sola all'istante.
     val darkMode by settingsViewModel.darkMode.collectAsState(initial = false)
     val voti by votoViewModel.tuttiIVoti.collectAsState()
     
+    // ---- CALCOLO DINAMICO DELLE STATISTICHE ----
+    // Esami dati: conta semplicemente quanti elementi ci sono nella lista dei voti.
     val esamiDati = voti.size
+    
+    // Media voti: calcola la media matematica dei voti presenti. Se la lista è vuota (0 esami), restituisce 0.0.
     val mediaVoti = if (voti.isNotEmpty()) voti.map { it.voto }.average() else 0.0
+    // Formattiamo il numero per avere una sola cifra decimale, garantendo un layout pulito (es. 26.5 invece di 26.5432).
     val mediaFormat = String.format(Locale.US, "%.1f", mediaVoti)
-    // Se non ci sono i crediti nel modello Voto, facciamo una stima media di 6 CFU a esame
+    
+    // Crediti: poiché il modello dati (Database) attuale non prevede un campo CFU, 
+    // moltiplichiamo in automatico il numero di esami per 6 (una stima standard) in modo da testare l'UI.
     val crediti = voti.size * 6
 
     Scaffold(
@@ -97,7 +111,9 @@ fun SettingsScreen(
                 }
             }
 
-            // Statistiche (3 Box)
+            // ---- SEZIONE STATISTICHE (3 BOX) ----
+            // Usiamo una Row per disporre le card in orizzontale. 
+            // Modifier.weight(1f) su ogni card dice al sistema di dividerle in tre parti esattamente uguali.
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween

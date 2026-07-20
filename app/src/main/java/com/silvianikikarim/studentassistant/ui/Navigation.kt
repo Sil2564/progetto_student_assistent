@@ -12,13 +12,22 @@ import com.silvianikikarim.studentassistant.viewmodel.VotoViewModel
 import com.silvianikikarim.studentassistant.viewmodel.SettingsViewModel
 import com.silvianikikarim.studentassistant.ui.settings.SettingsScreen
 
+/**
+ * AppNavigation
+ * "cuore"  app (il router).
+ * Jetpack Compose utilizza il NavController per gestire lo spostamento tra le schermate
+ * senza dover creare multiple Activity. Ogni schermata è un "composable" a cui assegniamo una rotta (stringa).
+ */
 @Composable
 fun AppNavigation(
     votoViewModel: VotoViewModel,
     appuntiViewModel: AppuntiViewModel
 ) {
+    // Inizializziamo il controller della navigazione
     val navController = rememberNavController()
 
+    // Il NavHost contiene l'albero di tutte le destinazioni possibili.
+    // startDestination indica quale schermata aprire all'avvio dell'app.
     NavHost(
         navController = navController,
         startDestination = Routes.HOME
@@ -56,8 +65,9 @@ fun AppNavigation(
             NotaTestoEditorScreen(materiaId, notaId, navController, appuntiViewModel)
         }
 
+        // ---- SEZIONE CALENDARIO ----
         composable(Routes.CALENDARIO_STUDIO) {
-            CalendarioStudioScreen()
+            CalendarioStudioScreen(navController)
         }
 
         composable(Routes.ANDAMENTO) {
@@ -68,6 +78,9 @@ fun AppNavigation(
             ConsigliScreen(navController)
         }
 
+        // ---- SEZIONE IMPOSTAZIONI ----
+        // Per le impostazioni, recuperiamo il SettingsDataStore (che legge le preferenze salvate in locale, es. Dark Mode)
+        // e lo passiamo al SettingsViewModel.
         composable(Routes.IMPOSTAZIONI) {
             val context = androidx.compose.ui.platform.LocalContext.current
             val settingsDataStore = com.silvianikikarim.studentassistant.util.SettingsDataStore(context)

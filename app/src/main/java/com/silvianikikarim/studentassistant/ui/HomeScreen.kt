@@ -17,10 +17,17 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 
+/**
+ * HomeScreen
+ * Questa è la schermata principale (la dashboard) dell'applicazione.
+ * Qui mostriamo le opzioni principali sotto forma di griglia (Card).
+ */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun HomeScreen(navController: NavController) {
 
+    // Lista delle voci che vogliamo mostrare nella griglia.
+    // Ognuna ha un titolo visibile e la rotta (route) a cui navigare quando viene cliccata.
     val items = listOf(
         HomeItem("Orario lezioni", Routes.ORARIO),
         HomeItem("I miei appunti", Routes.APPUNTI),
@@ -30,6 +37,7 @@ fun HomeScreen(navController: NavController) {
         HomeItem("Impostazioni", Routes.IMPOSTAZIONI)
     )
 
+    // Lo Scaffold fornisce l'infrastruttura di base per la pagina (es. la barra in alto).
     Scaffold(
         topBar = {
             TopAppBar(
@@ -48,6 +56,8 @@ fun HomeScreen(navController: NavController) {
         }
     ) { padding ->
 
+        // LazyVerticalGrid è perfetto per creare griglie flessibili (tipo quelle di Instagram o dashboard).
+        // Fixed(2) impone esattamente 2 colonne di larghezza uguale.
         LazyVerticalGrid(
             columns = GridCells.Fixed(2),
             modifier = Modifier
@@ -66,16 +76,22 @@ fun HomeScreen(navController: NavController) {
     }
 }
 
+/**
+ * Singolo "bottone" a forma di scheda (Card) usato nella griglia.
+ */
 @Composable
 fun HomeCard(
     title: String,
     onClick: () -> Unit
 ) {
     Card(
+        // aspectRatio(1f) costringe la Card a essere perfettamente quadrata (rapporto larghezza:altezza = 1:1)
         modifier = Modifier
             .fillMaxWidth()
             .aspectRatio(1f)
             .clickable { onClick() },
+        // Utilizziamo surfaceVariant perché offre un contrasto perfetto sia in Dark che in Light mode,
+        // garantendo un'ottima leggibilità del testo al suo interno senza sforzare la vista.
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant
         ),
