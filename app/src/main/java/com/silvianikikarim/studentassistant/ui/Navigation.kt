@@ -1,22 +1,23 @@
 package com.silvianikikarim.studentassistant.ui
 
 import androidx.compose.runtime.Composable
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.silvianikikarim.studentassistant.ui.settings.SettingsScreen
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.ui.platform.LocalContext
+import com.silvianikikarim.studentassistant.model.AppuntiDatabase
+import com.silvianikikarim.studentassistant.repository.AppuntiRepository
 import com.silvianikikarim.studentassistant.viewmodel.AppuntiViewModel
-import com.silvianikikarim.studentassistant.viewmodel.SettingsViewModel
+import com.silvianikikarim.studentassistant.viewmodel.AppuntiViewModelFactory
 import com.silvianikikarim.studentassistant.viewmodel.VotoViewModel
+import com.silvianikikarim.studentassistant.viewmodel.SettingsViewModel
+import com.silvianikikarim.studentassistant.ui.settings.SettingsScreen
 
 @Composable
-fun AppNavigation(
-    votoViewModel: VotoViewModel,
-    appuntiViewModel: AppuntiViewModel
-) {
+fun AppNavigation(votoViewModel: VotoViewModel) {
     val navController = rememberNavController()
 
     NavHost(
@@ -33,19 +34,29 @@ fun AppNavigation(
         }
 
         composable(Routes.APPUNTI) {
-            AppuntiScreen(navController = navController, appuntiViewModel = appuntiViewModel)
+            val context = LocalContext.current
+            val database = AppuntiDatabase.getDatabase(context)
+            val appuntiViewModel: AppuntiViewModel = viewModel(
+                factory = AppuntiViewModelFactory(
+                    AppuntiRepository(database.materiaDao(), database.notaDao())
+                )
+            )
+            AppuntiScreen(navController, appuntiViewModel)
         }
 
         composable(
             route = Routes.APPUNTI_MATERIA,
             arguments = listOf(navArgument("materiaId") { type = NavType.LongType })
         ) { backStackEntry ->
-            val materiaId = backStackEntry.arguments?.getLong("materiaId") ?: 0L
-            MateriaAppuntiScreen(
-                materiaId = materiaId,
-                navController = navController,
-                appuntiViewModel = appuntiViewModel
+            val context = LocalContext.current
+            val database = AppuntiDatabase.getDatabase(context)
+            val appuntiViewModel: AppuntiViewModel = viewModel(
+                factory = AppuntiViewModelFactory(
+                    AppuntiRepository(database.materiaDao(), database.notaDao())
+                )
             )
+            val materiaId = backStackEntry.arguments?.getLong("materiaId") ?: 0L
+            MateriaAppuntiScreen(materiaId, navController, appuntiViewModel)
         }
 
         composable(
@@ -55,14 +66,16 @@ fun AppNavigation(
                 navArgument("notaId") { type = NavType.LongType }
             )
         ) { backStackEntry ->
-            val materiaId = backStackEntry.arguments?.getLong("materiaId") ?: 0L
-            val notaId = backStackEntry.arguments?.getLong("notaId") ?: 0L
-            NotaTestoEditorScreen(
-                materiaId = materiaId,
-                notaId = notaId,
-                navController = navController,
-                appuntiViewModel = appuntiViewModel
+            val context = LocalContext.current
+            val database = AppuntiDatabase.getDatabase(context)
+            val appuntiViewModel: AppuntiViewModel = viewModel(
+                factory = AppuntiViewModelFactory(
+                    AppuntiRepository(database.materiaDao(), database.notaDao())
+                )
             )
+            val materiaId = backStackEntry.arguments?.getLong("materiaId") ?: 0L
+            val notaId = backStackEntry.arguments?.getLong("notaId") ?: Routes.NOTA_ID_NUOVA
+            NotaTestoEditorScreen(materiaId, notaId, navController, appuntiViewModel)
         }
 
         composable(Routes.CALENDARIO_STUDIO) {

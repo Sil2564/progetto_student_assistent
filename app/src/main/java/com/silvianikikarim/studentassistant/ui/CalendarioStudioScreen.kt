@@ -11,6 +11,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.*
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.*
@@ -21,14 +22,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.silvianikikarim.studentassistant.ui.theme.BrandRed
+import com.silvianikikarim.studentassistant.ui.theme.SurfaceSoft
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.TextStyle
 import java.util.Locale
 import java.util.UUID
-
-private val BrandRed = Color(0xFFAF2A2D)
 
 private data class StudyEvent(
     val id: String,
@@ -93,7 +94,16 @@ fun CalendarioStudioScreen() {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Calendar", fontWeight = FontWeight.SemiBold) }
+                title = { Text("Calendar", fontWeight = FontWeight.SemiBold) },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.White,
+                    titleContentColor = MaterialTheme.colorScheme.onSurface
+                ),
+                actions = {
+                    IconButton(onClick = { /* TODO menu */ }) {
+                        Icon(Icons.Filled.MoreVert, contentDescription = "Menu")
+                    }
+                }
             )
         },
         floatingActionButton = {
@@ -110,7 +120,7 @@ fun CalendarioStudioScreen() {
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
+                .background(Color.White)
                 .padding(horizontal = 16.dp)
         ) {
             Spacer(Modifier.height(8.dp))
@@ -125,7 +135,7 @@ fun CalendarioStudioScreen() {
 
             Card(
                 shape = RoundedCornerShape(18.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)),
+                colors = CardDefaults.cardColors(containerColor = SurfaceSoft),
                 elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
@@ -429,7 +439,7 @@ private fun DayCell(
 private fun EventRowCard(event: StudyEvent) {
     Card(
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)),
+        colors = CardDefaults.cardColors(containerColor = SurfaceSoft),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -487,7 +497,7 @@ private fun EventRowCard(event: StudyEvent) {
 private fun EmptyEventsHint(onAdd: () -> Unit) {
     Card(
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)),
+        colors = CardDefaults.cardColors(containerColor = SurfaceSoft),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
