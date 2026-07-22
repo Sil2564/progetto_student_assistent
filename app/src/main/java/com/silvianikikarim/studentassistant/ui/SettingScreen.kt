@@ -8,6 +8,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Notifications
@@ -21,19 +22,48 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.silvianikikarim.studentassistant.ui.Routes
 import com.silvianikikarim.studentassistant.viewmodel.SettingsViewModel
+import com.silvianikikarim.studentassistant.viewmodel.VotoViewModel
+import java.util.Locale
 
+/**
+ * SettingsScreen
+ * Schermata dedicata alle impostazioni dell'utente e alla visualizzazione del riepilogo dati (statistiche).
+ * Riceve in input i ViewModel per accedere ai dati salvati e alle preferenze (es. Dark Mode).
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
-    viewModel: SettingsViewModel,
+    settingsViewModel: SettingsViewModel,
+    votoViewModel: VotoViewModel,
     navController: NavController
 ) {
-    val darkMode by viewModel.darkMode.collectAsState(initial = false)
+    // Usiamo collectAsState per "osservare" in tempo reale i cambiamenti.
+    // Se cambia il tema o viene aggiunto un nuovo voto nel DB, la UI si aggiorna da sola all'istante.
+    val darkMode by settingsViewModel.darkMode.collectAsState(initial = false)
+    val voti by votoViewModel.tuttiIVoti.collectAsState()
+    
+    // ---- CALCOLO DINAMICO DELLE STATISTICHE ----
+    // Esami dati: conta semplicemente quanti elementi ci sono nella lista dei voti.
+    val esamiDati = voti.size
+    
+    // Media voti: calcola la media matematica dei voti presenti. Se la lista è vuota (0 esami), restituisce 0.0.
+    val mediaVoti = if (voti.isNotEmpty()) voti.map { it.voto }.average() else 0.0
+    // Formattiamo il numero per avere una sola cifra decimale, garantendo un layout pulito (es. 26.5 invece di 26.5432).
+    val mediaFormat = String.format(Locale.US, "%.1f", mediaVoti)
+    
+    // Crediti: poiché il modello dati (Database) attuale non prevede un campo CFU, 
+    // moltiplichiamo in automatico il numero di esami per 6 (una stima standard) in modo da testare l'UI.
+    val crediti = voti.size * 6
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("Impostazioni", fontWeight = FontWeight.Bold) },
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Indietro")
+                    }
+                },
                 actions = {
                     IconButton(onClick = { /* Notifiche placeholder */ }) {
                         Icon(Icons.Default.Notifications, contentDescription = "Notifiche")
@@ -81,16 +111,18 @@ fun SettingsScreen(
                 }
             }
 
-            // Statistiche (3 Box)
+            // ---- SEZIONE STATISTICHE (3 BOX) ----
+            // Usiamo una Row per disporre le card in orizzontale. 
+            // Modifier.weight(1f) su ogni card dice al sistema di dividerle in tre parti esattamente uguali.
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                StatCard(title = "Esami Dati", value = "12", modifier = Modifier.weight(1f))
+                StatCard(title = "Esami Dati", value = esamiDati.toString(), modifier = Modifier.weight(1f))
                 Spacer(modifier = Modifier.width(8.dp))
-                StatCard(title = "Media Voti", value = "27.5", modifier = Modifier.weight(1f))
+                StatCard(title = "Media Voti", value = mediaFormat, modifier = Modifier.weight(1f))
                 Spacer(modifier = Modifier.width(8.dp))
-                StatCard(title = "Crediti", value = "60", modifier = Modifier.weight(1f))
+                StatCard(title = "Crediti", value = crediti.toString(), modifier = Modifier.weight(1f))
             }
 
             // Lista Voci Impostazioni
@@ -121,7 +153,7 @@ fun SettingsScreen(
                         )
                         Switch(
                             checked = darkMode,
-                            onCheckedChange = { viewModel.toggleDarkMode(it) }
+                            onCheckedChange = { settingsViewModel.toggleDarkMode(it) }
                         )
                     }
                     

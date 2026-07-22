@@ -11,12 +11,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
-import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.navigation.NavController
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -40,9 +41,16 @@ private data class StudyEvent(
     val type: String     // "Studio", "Esame", "Ripasso", ecc.
 )
 
+/**
+ * CalendarioStudioScreen
+ * Questa schermata gestisce la visualizzazione del calendario e degli eventi di studio.
+ * Implementa una logica custom per disegnare la griglia dei giorni e filtrare gli eventi.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CalendarioStudioScreen() {
+fun CalendarioStudioScreen(navController: NavController) {
+    // Variabili di stato (State) per memorizzare il mese correntemente visualizzato e il giorno selezionato.
+    // Usiamo "remember" in modo che Compose non resetti queste variabili ogni volta che la UI viene ridisegnata (recomposition).
     var shownMonth by remember { mutableStateOf(YearMonth.now()) }
     var selectedDate by remember { mutableStateOf(LocalDate.now()) }
 
@@ -58,14 +66,18 @@ fun CalendarioStudioScreen() {
     }
 
     // ---- DIALOG STATE ----
+    // Controlla se la finestra (Dialog) per aggiungere un nuovo evento è aperta o chiusa.
     var showAddDialog by remember { mutableStateOf(false) }
 
+    // Raggruppiamo tutti gli eventi per data, così è più veloce cercare se un giorno specifico ha degli eventi.
+    // L'utilizzo di "remember(allEvents)" fa sì che il raggruppamento venga ricalcolato solo se la lista eventi cambia.
     val eventsByDate = remember(allEvents) { allEvents.groupBy { it.date } }
 
     val monthEventsCount = remember(shownMonth, allEvents) {
         allEvents.count { YearMonth.from(it.date) == shownMonth }
     }
 
+    // Estrae gli eventi relativi esclusivamente al giorno selezionato e li ordina per orario di inizio.
     val selectedEvents = remember(selectedDate, eventsByDate) {
         (eventsByDate[selectedDate] ?: emptyList()).sortedBy { it.start }
     }
@@ -94,16 +106,16 @@ fun CalendarioStudioScreen() {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Calendar", fontWeight = FontWeight.SemiBold) },
+                title = { Text("Calendario", fontWeight = FontWeight.SemiBold) },
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Indietro")
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = Color.White,
                     titleContentColor = MaterialTheme.colorScheme.onSurface
-                ),
-                actions = {
-                    IconButton(onClick = { /* TODO menu */ }) {
-                        Icon(Icons.Filled.MoreVert, contentDescription = "Menu")
-                    }
-                }
+                )
             )
         },
         floatingActionButton = {
@@ -133,6 +145,7 @@ fun CalendarioStudioScreen() {
 
             Spacer(Modifier.height(12.dp))
 
+            // Il contenitore del Calendario vero e proprio
             Card(
                 shape = RoundedCornerShape(18.dp),
                 colors = CardDefaults.cardColors(containerColor = SurfaceSoft),
@@ -181,11 +194,13 @@ fun CalendarioStudioScreen() {
 
             Spacer(Modifier.height(10.dp))
 
+            // Logica per mostrare o la lista degli eventi o un messaggio vuoto
             if (selectedEvents.isEmpty()) {
                 EmptyEventsHint(
                     onAdd = { showAddDialog = true }
                 )
             } else {
+                // Se ci sono eventi, usiamo LazyColumn per creare una lista scrollabile in modo efficiente
                 LazyColumn(
                     contentPadding = PaddingValues(bottom = 96.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp)
@@ -309,7 +324,7 @@ private fun TypeDropdown(
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
             modifier = Modifier
                 .fillMaxWidth()
-                .menuAnchor()
+                .menuAnchor(type = ExposedDropdownMenuAnchorType.PrimaryNotEditable, enabled = true)
         )
 
         ExposedDropdownMenu(
@@ -515,7 +530,10 @@ private fun EmptyEventsHint(onAdd: () -> Unit) {
     }
 }
 
-/** Griglia 6x7 (42 celle) con partenza da Lunedì */
+/** 
+ * Costruisce una griglia 6x7 (42 celle) per il calendario, calcolando i giorni del mese precedente e successivo 
+ * necessari per riempire le caselle vuote all'inizio e alla fine.
+ */
 private fun buildMonthGridDays(month: YearMonth): List<LocalDate> {
     val firstOfMonth = month.atDay(1)
     val shift = ((firstOfMonth.dayOfWeek.value - DayOfWeek.MONDAY.value) + 7) % 7
