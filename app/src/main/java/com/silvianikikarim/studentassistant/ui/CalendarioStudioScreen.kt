@@ -109,7 +109,7 @@ fun CalendarioStudioScreen(navController: NavController) {
                 title = { Text("Calendario", fontWeight = FontWeight.SemiBold) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(androidx.compose.material.icons.Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Indietro")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Indietro")
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
