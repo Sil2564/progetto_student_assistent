@@ -18,7 +18,7 @@ class AppuntiViewModel(private val repository: AppuntiRepository) : ViewModel() 
 
     fun inserisciMateria(nome: String) {
         viewModelScope.launch {
-            repository.inserisciMateria(Materia(nome = nome))
+            repository.inserisciMateria(nome)
         }
     }
 

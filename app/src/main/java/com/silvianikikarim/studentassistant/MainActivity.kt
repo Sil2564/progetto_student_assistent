@@ -3,10 +3,12 @@ package com.silvianikikarim.studentassistant
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.silvianikikarim.studentassistant.model.AppuntiDatabase
-import com.silvianikikarim.studentassistant.model.VotoDatabase
+import com.silvianikikarim.studentassistant.model.AppDatabase
+import com.silvianikikarim.studentassistant.model.MaterieAnnoCorrente
 import com.silvianikikarim.studentassistant.repository.AppuntiRepository
+import com.silvianikikarim.studentassistant.repository.MateriaRepository
 import com.silvianikikarim.studentassistant.repository.VotoRepository
 import com.silvianikikarim.studentassistant.repository.ConsigliRepository
 import com.silvianikikarim.studentassistant.network.ZenQuotesApi
@@ -23,19 +25,34 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import com.silvianikikarim.studentassistant.util.SettingsDataStore
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val votoDao = VotoDatabase.getDatabase(applicationContext).votoDao()
-        val votoRepository = VotoRepository(votoDao)
+        // Un solo database per tutta l'app: Materia è condivisa da Appunti e
+        // Andamento (e in futuro anche dall'Orario), niente più liste separate.
+        val appDatabase = AppDatabase.getDatabase(applicationContext)
+        val materiaRepository = MateriaRepository(appDatabase.materiaDao())
+
+        // Le materie "ufficiali" dell'anno (le stesse dell'Orario) vengono
+        // create una volta sola all'avvio: da qui in poi Andamento e Appunti
+        // le trovano già pronte, senza che l'utente debba inserirle a mano.
+        // Richiamarlo ad ogni avvio non crea duplicati (vedi getOrCreateMateria).
+        lifecycleScope.launch {
+            materiaRepository.seedMaterieSeNecessario(MaterieAnnoCorrente.nomi)
+        }
+
+        val votoRepository = VotoRepository(
+            votoDao = appDatabase.votoDao(),
+            materiaRepository = materiaRepository
+        )
         val votoFactory = VotoViewModelFactory(votoRepository)
 
-        val appuntiDatabase = AppuntiDatabase.getDatabase(applicationContext)
         val appuntiRepository = AppuntiRepository(
-            materiaDao = appuntiDatabase.materiaDao(),
-            notaDao = appuntiDatabase.notaDao()
+            materiaRepository = materiaRepository,
+            notaDao = appDatabase.notaDao()
         )
         val appuntiFactory = AppuntiViewModelFactory(appuntiRepository)
 

@@ -40,14 +40,14 @@ fun SettingsScreen(
     // Usiamo collectAsState per "osservare" in tempo reale i cambiamenti.
     // Se cambia il tema o viene aggiunto un nuovo voto nel DB, la UI si aggiorna da sola all'istante.
     val darkMode by settingsViewModel.darkMode.collectAsState(initial = false)
-    val voti by votoViewModel.tuttiIVoti.collectAsState()
+    val voti by votoViewModel.votiConMateria.collectAsState()
     
     // ---- CALCOLO DINAMICO DELLE STATISTICHE ----
     // Esami dati: conta semplicemente quanti elementi ci sono nella lista dei voti.
     val esamiDati = voti.size
     
     // Media voti: calcola la media matematica dei voti presenti. Se la lista è vuota (0 esami), restituisce 0.0.
-    val mediaVoti = if (voti.isNotEmpty()) voti.map { it.voto }.average() else 0.0
+    val mediaVoti = if (voti.isNotEmpty()) voti.map { it.voto.voto }.average() else 0.0
     // Formattiamo il numero per avere una sola cifra decimale, garantendo un layout pulito (es. 26.5 invece di 26.5432).
     val mediaFormat = String.format(Locale.US, "%.1f", mediaVoti)
     

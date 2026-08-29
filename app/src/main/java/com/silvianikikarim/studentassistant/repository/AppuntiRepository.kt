@@ -1,20 +1,20 @@
 package com.silvianikikarim.studentassistant.repository
 
 import com.silvianikikarim.studentassistant.model.Materia
-import com.silvianikikarim.studentassistant.model.MateriaDao
 import com.silvianikikarim.studentassistant.model.Nota
 import com.silvianikikarim.studentassistant.model.NotaDao
 import kotlinx.coroutines.flow.Flow
 
 class AppuntiRepository(
-    private val materiaDao: MateriaDao,
+    private val materiaRepository: MateriaRepository,
     private val notaDao: NotaDao
 ) {
-    val tutteLeMaterie: Flow<List<Materia>> = materiaDao.getAllMaterie()
+    val tutteLeMaterie: Flow<List<Materia>> = materiaRepository.tutteLeMaterie
 
-    suspend fun inserisciMateria(materia: Materia): Long = materiaDao.insertMateria(materia)
+    /** Se una materia con questo nome esiste già (anche scritta diversamente), la riusa invece di duplicarla. */
+    suspend fun inserisciMateria(nome: String): Long = materiaRepository.getOrCreateMateria(nome)
 
-    suspend fun eliminaMateria(materia: Materia) = materiaDao.deleteMateria(materia)
+    suspend fun eliminaMateria(materia: Materia) = materiaRepository.eliminaMateria(materia)
 
     fun noteByMateria(materiaId: Long): Flow<List<Nota>> = notaDao.getNoteByMateria(materiaId)
 
