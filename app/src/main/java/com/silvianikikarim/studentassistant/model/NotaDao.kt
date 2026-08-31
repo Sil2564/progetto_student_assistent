@@ -18,6 +18,9 @@ interface NotaDao {
     @Query("SELECT * FROM note WHERE materiaId = :materiaId ORDER BY dataModifica DESC")
     fun getNoteByMateria(materiaId: Long): Flow<List<Nota>>
 
+    @Query("SELECT * FROM note LIMIT 1")
+    suspend fun getUnaQualsiasiNota(): Nota?
+
     @Query("SELECT * FROM note WHERE id = :notaId")
     suspend fun getNotaById(notaId: Long): Nota?
 }

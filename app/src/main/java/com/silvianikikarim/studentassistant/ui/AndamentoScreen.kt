@@ -172,8 +172,10 @@ fun AndamentoScreen(viewModel: VotoViewModel, navController: NavController) {
 
 @Composable
 private fun MediaGeneraleCard(voti: List<VotoConMateria>) {
-    val media = remember(voti) {
-        if (voti.isEmpty()) 0f else voti.map { valoreNumerico(it.voto.voto) }.average().toFloat()
+    // I tirocini (idoneo/non idoneo) non sono voti numerici: si escludono dalla media generale.
+    val votiValutabili = remember(voti) { voti.filter { !isTirocinio(it.nomeMateria) } }
+    val media = remember(votiValutabili) {
+        if (votiValutabili.isEmpty()) 0f else votiValutabili.map { valoreNumerico(it.voto.voto) }.average().toFloat()
     }
 
     Card(
@@ -199,7 +201,7 @@ private fun MediaGeneraleCard(voti: List<VotoConMateria>) {
                         useCenter = false,
                         style = stroke
                     )
-                    if (voti.isNotEmpty()) {
+                    if (votiValutabili.isNotEmpty()) {
                         val sweep = (media / 30f).coerceIn(0f, 1f) * 360f
                         drawArc(
                             color = BrandRed,
@@ -212,7 +214,7 @@ private fun MediaGeneraleCard(voti: List<VotoConMateria>) {
                 }
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
-                        text = if (voti.isEmpty()) "--" else String.format(Locale.ITALIAN, "%.1f", media),
+                        text = if (votiValutabili.isEmpty()) "--" else String.format(Locale.ITALIAN, "%.1f", media),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                         color = BrandRed
@@ -235,10 +237,10 @@ private fun MediaGeneraleCard(voti: List<VotoConMateria>) {
                 )
                 Spacer(Modifier.height(4.dp))
                 Text(
-                    text = if (voti.isEmpty()) {
+                    text = if (votiValutabili.isEmpty()) {
                         "Nessun voto inserito"
                     } else {
-                        "${voti.size} " + if (voti.size == 1) "voto registrato" else "voti registrati"
+                        "${votiValutabili.size} " + if (votiValutabili.size == 1) "voto registrato" else "voti registrati"
                     },
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -361,7 +363,7 @@ private fun MateriaAndamentoRowCard(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = etichettaVoto(votoMateria.voto.voto),
+                        text = etichettaVoto(materia.nome, votoMateria.voto.voto),
                         color = BrandRed,
                         fontWeight = FontWeight.Bold
                     )
@@ -422,9 +424,12 @@ private fun VotoBottomSheet(
     onSave: (voto: Int, data: String, descrizione: String, note: String) -> Unit,
     onElimina: () -> Unit
 ) {
+    // I tirocini si valutano con "Idoneo/Non Idoneo", non con un voto in trentesimi.
+    val tirocinio = remember(nomeMateria) { isTirocinio(nomeMateria) }
+
     var votoLabel by remember(votoEsistente) {
         mutableStateOf(
-            votoEsistente?.voto?.voto?.let { if (it == 31) "30 e Lode" else it.toString() } ?: ""
+            votoEsistente?.voto?.voto?.let { etichettaVoto(nomeMateria, it) } ?: ""
         )
     }
     var tipologia by remember(votoEsistente) { mutableStateOf(votoEsistente?.voto?.descrizione ?: "") }
@@ -434,7 +439,9 @@ private fun VotoBottomSheet(
     var showDatePicker by remember { mutableStateOf(false) }
     var confermaEliminazione by remember { mutableStateOf(false) }
 
-    val votoOptions = remember { (18..30).map { it.toString() } + "30 e Lode" }
+    val votoOptions = remember(tirocinio) {
+        if (tirocinio) listOf("Idoneo", "Non Idoneo") else (18..30).map { it.toString() } + "30 e Lode"
+    }
     val tipologiaOptions = listOf("Orale", "Scritto", "Pratico")
 
     val canSave = votoLabel.isNotEmpty() && dataText.isNotEmpty() && tipologia.isNotEmpty()
@@ -448,7 +455,11 @@ private fun VotoBottomSheet(
 
     fun salvaEChiudi() {
         if (!canSave) return
-        val votoValore = if (votoLabel == "30 e Lode") 31 else votoLabel.toIntOrNull() ?: return
+        val votoValore = when {
+            tirocinio -> if (votoLabel == "Idoneo") 1 else 0
+            votoLabel == "30 e Lode" -> 31
+            else -> votoLabel.toIntOrNull() ?: return
+        }
         onSave(votoValore, dataText, tipologia, note.trim())
     }
 
@@ -641,6 +652,17 @@ private fun formattaDataMillis(millis: Long): String {
 /** 31 è la codifica interna di "30 e Lode" (nessuna modifica allo schema Room). */
 internal fun valoreNumerico(voto: Int): Int = if (voto == 31) 30 else voto
 
-internal fun etichettaVoto(voto: Int): String = if (voto == 31) "30L" else voto.toString()
+/** Vero se questa materia si valuta con "Idoneo/Non Idoneo" invece che in trentesimi. */
+internal fun isTirocinio(nomeMateria: String): Boolean = nomeMateria.contains("Tirocinio", ignoreCase = true)
 
-internal fun etichettaVotoEstesa(voto: Int): String = if (voto == 31) "30 e Lode" else voto.toString()
+internal fun etichettaVoto(nomeMateria: String, voto: Int): String = when {
+    isTirocinio(nomeMateria) -> if (voto == 1) "Idoneo" else "Non Idoneo"
+    voto == 31 -> "30L"
+    else -> voto.toString()
+}
+
+internal fun etichettaVotoEstesa(nomeMateria: String, voto: Int): String = when {
+    isTirocinio(nomeMateria) -> if (voto == 1) "Idoneo" else "Non Idoneo"
+    voto == 31 -> "30 e Lode"
+    else -> voto.toString()
+}
