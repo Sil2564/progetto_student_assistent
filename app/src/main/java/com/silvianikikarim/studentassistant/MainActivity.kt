@@ -13,7 +13,6 @@ import com.silvianikikarim.studentassistant.repository.VotoRepository
 import com.silvianikikarim.studentassistant.repository.ConsigliRepository
 import com.silvianikikarim.studentassistant.network.ZenQuotesApi
 import com.silvianikikarim.studentassistant.util.FrasedelGiornoCache
-import com.silvianikikarim.studentassistant.util.DatiEsempioSeeder
 import com.silvianikikarim.studentassistant.ui.*
 import com.silvianikikarim.studentassistant.ui.theme.StudentAssistantTheme
 import com.silvianikikarim.studentassistant.viewmodel.AppuntiViewModel
@@ -43,12 +42,6 @@ class MainActivity : ComponentActivity() {
         // Richiamarlo ad ogni avvio non crea duplicati (vedi getOrCreateMateria).
         lifecycleScope.launch {
             materiaRepository.seedMaterieSeNecessario(MaterieCorso.tutte)
-            // Dati di esempio realistici (voti 1° anno + appunti), solo se l'app è ancora vuota.
-            DatiEsempioSeeder.popolaSeVuoto(
-                materiaDao = appDatabase.materiaDao(),
-                votoDao = appDatabase.votoDao(),
-                notaDao = appDatabase.notaDao()
-            )
         }
 
         val votoRepository = VotoRepository(
