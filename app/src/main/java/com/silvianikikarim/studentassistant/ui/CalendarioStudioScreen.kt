@@ -82,6 +82,9 @@ fun CalendarioStudioScreen(navController: NavController) {
         (eventsByDate[selectedDate] ?: emptyList()).sortedBy { it.start }
     }
 
+    // ---- POPUP DETTAGLI EVENTO ----
+    var selectedEventForPopup by remember { mutableStateOf<StudyEvent?>(null) }
+
     // ---- DIALOG UI ----
     if (showAddDialog) {
         AddStudyEventDialog(
@@ -206,11 +209,107 @@ fun CalendarioStudioScreen(navController: NavController) {
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     items(selectedEvents, key = { it.id }) { ev ->
-                        EventRowCard(event = ev)
+                        EventRowCard(
+                            event = ev,
+                            onClick = { selectedEventForPopup = ev }
+                        )
                     }
                 }
             }
         }
+    }
+
+    // ---- POPUP DETTAGLI STUDIO EVENT ----
+    if (selectedEventForPopup != null) {
+        val ev = selectedEventForPopup!!
+        val duration = calculateDuration(ev.start, ev.end)
+        val tip = when (ev.type) {
+            "Studio" -> "Consiglio: Mantieni alta la concentrazione alternando sessioni di 45/50 min con pause regolari (Tecnica Pomodoro)."
+            "Ripasso" -> "Consiglio: Focalizzati su riassunti, schemi e simulazione di domande d'esame per fissare i concetti."
+            "Esame" -> "Consiglio: Arriva con anticipo, assicurati di avere con te documento/badge e affrontalo con lucidità!"
+            else -> "Organizza al meglio la tua sessione per massimizzare la produttività."
+        }
+
+        AlertDialog(
+            onDismissRequest = { selectedEventForPopup = null },
+            title = {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = ev.title,
+                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.titleLarge,
+                        modifier = Modifier.weight(1f)
+                    )
+                    AssistChip(
+                        onClick = {},
+                        label = { Text(ev.type, fontWeight = FontWeight.SemiBold) },
+                        colors = AssistChipDefaults.assistChipColors(
+                            containerColor = BrandRed.copy(alpha = 0.12f),
+                            labelColor = BrandRed
+                        ),
+                        border = null
+                    )
+                }
+            },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text(
+                        text = "📅 Data: ${ev.date.dayOfMonth} ${ev.date.month.getDisplayName(TextStyle.FULL, Locale.ITALIAN).replaceFirstChar { it.uppercase() }} ${ev.date.year}",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Text(
+                        text = "⏰ Orario: ${ev.start} - ${ev.end} ($duration)",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Medium
+                    )
+
+                    Spacer(Modifier.height(4.dp))
+
+                    Card(
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(containerColor = BrandRed.copy(alpha = 0.06f)),
+                        elevation = CardDefaults.cardElevation(0.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(Modifier.padding(12.dp)) {
+                            Text(
+                                text = "💡 Suggerimento Sessione",
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = BrandRed
+                            )
+                            Spacer(Modifier.height(4.dp))
+                            Text(
+                                text = tip,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { selectedEventForPopup = null }) {
+                    Text("Chiudi", color = BrandRed, fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        allEvents = allEvents.filter { it.id != ev.id }
+                        selectedEventForPopup = null
+                    }
+                ) {
+                    Text("Elimina Evento", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            containerColor = Color.White,
+            shape = RoundedCornerShape(18.dp)
+        )
     }
 }
 
@@ -451,12 +550,14 @@ private fun DayCell(
 }
 
 @Composable
-private fun EventRowCard(event: StudyEvent) {
+private fun EventRowCard(event: StudyEvent, onClick: () -> Unit) {
     Card(
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = SurfaceSoft),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() }
     ) {
         Row(
             modifier = Modifier.padding(14.dp),
@@ -496,7 +597,7 @@ private fun EventRowCard(event: StudyEvent) {
             }
 
             AssistChip(
-                onClick = { },
+                onClick = onClick,
                 label = { Text(event.type) },
                 colors = AssistChipDefaults.assistChipColors(
                     containerColor = BrandRed.copy(alpha = 0.10f),
@@ -552,4 +653,26 @@ private fun isValidTime(value: String): Boolean {
     val h = parts[0].toIntOrNull() ?: return false
     val m = parts[1].toIntOrNull() ?: return false
     return h in 0..23 && m in 0..59 && parts[0].length == 2 && parts[1].length == 2
+}
+
+private fun calculateDuration(start: String, end: String): String {
+    val sParts = start.split(":")
+    val eParts = end.split(":")
+    if (sParts.size == 2 && eParts.size == 2) {
+        val sH = sParts[0].toIntOrNull() ?: 0
+        val sM = sParts[1].toIntOrNull() ?: 0
+        val eH = eParts[0].toIntOrNull() ?: 0
+        val eM = eParts[1].toIntOrNull() ?: 0
+        val totalMinutes = (eH * 60 + eM) - (sH * 60 + sM)
+        if (totalMinutes > 0) {
+            val hours = totalMinutes / 60
+            val minutes = totalMinutes % 60
+            return when {
+                hours > 0 && minutes > 0 -> "${hours}h ${minutes}m"
+                hours > 0 -> "${hours} ore"
+                else -> "${minutes} min"
+            }
+        }
+    }
+    return "N/D"
 }
