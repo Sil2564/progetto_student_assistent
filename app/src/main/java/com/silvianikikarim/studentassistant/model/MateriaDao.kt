@@ -14,4 +14,7 @@ interface MateriaDao {
 
     @Query("SELECT * FROM materie ORDER BY nome ASC")
     fun getAllMaterie(): Flow<List<Materia>>
+
+    @Query("SELECT * FROM materie WHERE LOWER(nome) = LOWER(:nome) LIMIT 1")
+    suspend fun getByNomeIgnoreCase(nome: String): Materia?
 }

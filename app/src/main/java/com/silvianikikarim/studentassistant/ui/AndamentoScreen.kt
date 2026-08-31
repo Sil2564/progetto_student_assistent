@@ -1,10 +1,8 @@
 package com.silvianikikarim.studentassistant.ui
 
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -14,8 +12,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Grade
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -28,7 +29,8 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.silvianikikarim.studentassistant.model.Voto
+import com.silvianikikarim.studentassistant.model.Materia
+import com.silvianikikarim.studentassistant.model.VotoConMateria
 import com.silvianikikarim.studentassistant.ui.theme.BrandRed
 import com.silvianikikarim.studentassistant.ui.theme.SurfaceSoft
 import com.silvianikikarim.studentassistant.viewmodel.VotoViewModel
@@ -38,43 +40,57 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 /**
- * Schermata "Andamento": media voti in evidenza (anello grafico) + elenco.
- * Stile allineato a CalendarioStudioScreen / AppuntiScreen: stessa palette
- * (BrandRed / SurfaceSoft), stesse card arrotondate, FAB rosso che apre un
- * bottom sheet per l'inserimento (come per gli appunti).
- *
- * Nota sulla codifica del voto: essendo il campo "voto" un Int, "30 e Lode"
- * viene salvato come 31 (nessuna modifica allo schema Room necessaria). Nel
- * calcolo della media la lode vale 30, come da prassi.
+ * Schermata "Andamento": elenco delle materie dell'anno (le stesse mostrate in
+ * Orario e in Appunti — nessuna creazione libera qui), ognuna con AL MASSIMO
+ * un voto assegnato. Si tocca una materia e si apre un popup ("Nuovo voto" /
+ * "Modifica voto") per assegnare o cambiare il voto di QUELLA materia —
+ * nessuna nuova pagina, tutto resta su questa schermata.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AndamentoScreen(viewModel: VotoViewModel, navController: NavController) {
-    val listaVoti by viewModel.tuttiIVoti.collectAsState()
+    val materie by viewModel.tutteLeMaterie.collectAsState()
+    val votiConMateria by viewModel.votiConMateria.collectAsState()
 
-    var showAddSheet by remember { mutableStateOf(false) }
-    var votoDaEliminare by remember { mutableStateOf<Voto?>(null) }
-
-    if (showAddSheet) {
-        AggiungiVotoBottomSheet(
-            onDismiss = { showAddSheet = false },
-            onSave = { nuovoVoto -> viewModel.inserisciVoto(nuovoVoto) }
-        )
+    // Popola le materie dell'anno la prima volta (idempotente: non duplica se già presenti).
+    LaunchedEffect(Unit) {
+        viewModel.seedMaterieCorso()
     }
 
-    votoDaEliminare?.let { voto ->
-        AlertDialog(
-            onDismissRequest = { votoDaEliminare = null },
-            title = { Text("Eliminare questo voto?") },
-            text = { Text("${voto.materia} — ${etichettaVotoEstesa(voto.voto)}") },
-            confirmButton = {
-                TextButton(onClick = {
-                    viewModel.eliminaVoto(voto)
-                    votoDaEliminare = null
-                }) { Text("Elimina", color = BrandRed) }
+    // Materie raggruppate per anno di corso (1°, 2°, 3°), in ordine.
+    val materiePerAnno = remember(materie) { materie.groupBy { it.anno }.toSortedMap() }
+
+    // Quali sezioni "Anno" sono aperte: il 2° anno (quello corrente) parte già espanso.
+    var anniEspansi by remember { mutableStateOf(setOf(2)) }
+
+    // Al massimo un voto per materia: mappa diretta materiaId -> il suo unico voto (se c'è).
+    val votoPerMateriaId = remember(votiConMateria) {
+        votiConMateria.associateBy { it.voto.materiaId }
+    }
+
+    // Materia su cui si è appena toccato: se non è null, mostriamo il popup del voto.
+    var materiaSelezionata by remember { mutableStateOf<Materia?>(null) }
+
+    materiaSelezionata?.let { materia ->
+        val votoEsistente = votoPerMateriaId[materia.id]
+        VotoBottomSheet(
+            nomeMateria = materia.nome,
+            votoEsistente = votoEsistente,
+            onDismiss = { materiaSelezionata = null },
+            onSave = { votoValore, dataText, tipologia, note ->
+                viewModel.inserisciVoto(
+                    materiaId = materia.id,
+                    voto = votoValore,
+                    data = dataText,
+                    descrizione = tipologia,
+                    note = note,
+                    idEsistente = votoEsistente?.voto?.id ?: 0
+                )
+                materiaSelezionata = null
             },
-            dismissButton = {
-                TextButton(onClick = { votoDaEliminare = null }) { Text("Annulla") }
+            onElimina = {
+                votoEsistente?.let { viewModel.eliminaVoto(it.voto) }
+                materiaSelezionata = null
             }
         )
     }
@@ -93,15 +109,6 @@ fun AndamentoScreen(viewModel: VotoViewModel, navController: NavController) {
                     titleContentColor = MaterialTheme.colorScheme.onSurface
                 )
             )
-        },
-        floatingActionButton = {
-            FloatingActionButton(
-                containerColor = BrandRed,
-                contentColor = Color.White,
-                onClick = { showAddSheet = true }
-            ) {
-                Icon(Icons.Filled.Add, contentDescription = "Aggiungi voto")
-            }
         }
     ) { innerPadding ->
         Column(
@@ -113,30 +120,49 @@ fun AndamentoScreen(viewModel: VotoViewModel, navController: NavController) {
         ) {
             Spacer(Modifier.height(8.dp))
 
-            MediaCard(listaVoti)
+            MediaGeneraleCard(votiConMateria)
 
             Spacer(Modifier.height(20.dp))
 
             Text(
-                text = "I miei voti",
+                text = "Le mie materie",
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.SemiBold
             )
 
             Spacer(Modifier.height(10.dp))
 
-            if (listaVoti.isEmpty()) {
-                EmptyVotiHint(onAdd = { showAddSheet = true })
+            if (materie.isEmpty()) {
+                EmptyMaterieHint()
             } else {
                 LazyColumn(
                     contentPadding = PaddingValues(bottom = 96.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    items(listaVoti, key = { it.id }) { voto ->
-                        VotoRowCard(
-                            voto = voto,
-                            onLongClick = { votoDaEliminare = voto }
-                        )
+                    materiePerAnno.forEach { (anno, materieAnno) ->
+                        item(key = "header_$anno") {
+                            AnnoSectionHeader(
+                                anno = anno,
+                                numeroMaterie = materieAnno.size,
+                                espanso = anno in anniEspansi,
+                                onToggle = {
+                                    anniEspansi = if (anno in anniEspansi) {
+                                        anniEspansi - anno
+                                    } else {
+                                        anniEspansi + anno
+                                    }
+                                }
+                            )
+                        }
+                        if (anno in anniEspansi) {
+                            items(materieAnno, key = { it.id }) { materia ->
+                                MateriaAndamentoRowCard(
+                                    materia = materia,
+                                    votoMateria = votoPerMateriaId[materia.id],
+                                    onClick = { materiaSelezionata = materia }
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -145,9 +171,9 @@ fun AndamentoScreen(viewModel: VotoViewModel, navController: NavController) {
 }
 
 @Composable
-private fun MediaCard(voti: List<Voto>) {
+private fun MediaGeneraleCard(voti: List<VotoConMateria>) {
     val media = remember(voti) {
-        if (voti.isEmpty()) 0f else voti.map { valoreNumerico(it.voto) }.average().toFloat()
+        if (voti.isEmpty()) 0f else voti.map { valoreNumerico(it.voto.voto) }.average().toFloat()
     }
 
     Card(
@@ -222,66 +248,133 @@ private fun MediaCard(voti: List<Voto>) {
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun VotoRowCard(voto: Voto, onLongClick: () -> Unit) {
+private fun AnnoSectionHeader(
+    anno: Int,
+    numeroMaterie: Int,
+    espanso: Boolean,
+    onToggle: () -> Unit
+) {
+    Card(
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(containerColor = BrandRed.copy(alpha = 0.08f)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onToggle)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(Modifier.weight(1f)) {
+                Text(
+                    text = etichettaAnno(anno),
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    color = BrandRed
+                )
+                Text(
+                    text = "$numeroMaterie " + if (numeroMaterie == 1) "materia" else "materie",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Icon(
+                imageVector = if (espanso) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
+                contentDescription = if (espanso) "Comprimi" else "Espandi",
+                tint = BrandRed
+            )
+        }
+    }
+}
+
+private fun etichettaAnno(anno: Int): String = when (anno) {
+    1 -> "1° Anno"
+    2 -> "2° Anno"
+    3 -> "3° Anno"
+    else -> "Anno $anno"
+}
+
+@Composable
+private fun MateriaAndamentoRowCard(
+    materia: Materia,
+    votoMateria: VotoConMateria?,
+    onClick: () -> Unit
+) {
     Card(
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = SurfaceSoft),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         modifier = Modifier
             .fillMaxWidth()
-            .combinedClickable(onClick = {}, onLongClick = onLongClick)
+            .clickable(onClick = onClick)
     ) {
         Row(
             modifier = Modifier.padding(14.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column(
+            Box(
                 modifier = Modifier
-                    .width(56.dp)
+                    .size(44.dp)
                     .clip(RoundedCornerShape(14.dp))
-                    .background(BrandRed.copy(alpha = 0.10f))
-                    .padding(vertical = 8.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                    .background(BrandRed.copy(alpha = 0.10f)),
+                contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = etichettaVoto(voto.voto),
-                    color = BrandRed,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    "/ 30",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = BrandRed.copy(alpha = 0.7f)
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.MenuBook,
+                    contentDescription = null,
+                    tint = BrandRed
                 )
             }
 
             Spacer(Modifier.width(12.dp))
 
             Column(Modifier.weight(1f)) {
-                Text(voto.materia, fontWeight = FontWeight.SemiBold)
-                Spacer(Modifier.height(4.dp))
                 Text(
-                    text = "${voto.data} • ${voto.descrizione}",
+                    text = materia.nome,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Spacer(Modifier.height(2.dp))
+                Text(
+                    text = if (votoMateria == null) {
+                        "Tocca per assegnare un voto"
+                    } else {
+                        "${votoMateria.voto.descrizione} • ${votoMateria.voto.data}"
+                    },
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                if (voto.note.isNotBlank()) {
-                    Spacer(Modifier.height(2.dp))
+            }
+
+            Spacer(Modifier.width(8.dp))
+
+            if (votoMateria != null) {
+                Box(
+                    modifier = Modifier
+                        .size(44.dp)
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(BrandRed.copy(alpha = 0.10f)),
+                    contentAlignment = Alignment.Center
+                ) {
                     Text(
-                        text = voto.note,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        text = etichettaVoto(votoMateria.voto.voto),
+                        color = BrandRed,
+                        fontWeight = FontWeight.Bold
                     )
                 }
+            } else {
+                Icon(Icons.Filled.Add, contentDescription = "Assegna voto", tint = BrandRed)
             }
         }
     }
 }
 
 @Composable
-private fun EmptyVotiHint(onAdd: () -> Unit) {
+private fun EmptyMaterieHint() {
     Card(
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = SurfaceSoft),
@@ -304,40 +397,47 @@ private fun EmptyVotiHint(onAdd: () -> Unit) {
                 Icon(Icons.Default.Grade, contentDescription = null, tint = BrandRed)
             }
             Spacer(Modifier.height(12.dp))
-            Text("Nessun voto ancora.", fontWeight = FontWeight.SemiBold)
+            Text("Nessuna materia ancora.", fontWeight = FontWeight.SemiBold)
             Spacer(Modifier.height(6.dp))
             Text(
-                "Tocca + per registrare il tuo primo voto e iniziare a tracciare la media.",
+                "Le materie compariranno qui automaticamente in base all'Orario delle lezioni.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            Spacer(Modifier.height(10.dp))
-            TextButton(onClick = onAdd) { Text("Aggiungi voto", color = BrandRed) }
         }
     }
 }
 
+/**
+ * Popup per assegnare/modificare/eliminare l'UNICO voto di una materia.
+ * Se votoEsistente è null si comporta come "Nuovo voto" (campi vuoti);
+ * altrimenti precompila i campi e mostra anche l'opzione per eliminarlo.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun AggiungiVotoBottomSheet(
+private fun VotoBottomSheet(
+    nomeMateria: String,
+    votoEsistente: VotoConMateria?,
     onDismiss: () -> Unit,
-    onSave: (Voto) -> Unit
+    onSave: (voto: Int, data: String, descrizione: String, note: String) -> Unit,
+    onElimina: () -> Unit
 ) {
-    var materia by remember { mutableStateOf("") }
-    var votoLabel by remember { mutableStateOf("") }
-    var tipologia by remember { mutableStateOf("") }
-    var note by remember { mutableStateOf("") }
-    var dataText by remember { mutableStateOf("") }
+    var votoLabel by remember(votoEsistente) {
+        mutableStateOf(
+            votoEsistente?.voto?.voto?.let { if (it == 31) "30 e Lode" else it.toString() } ?: ""
+        )
+    }
+    var tipologia by remember(votoEsistente) { mutableStateOf(votoEsistente?.voto?.descrizione ?: "") }
+    var note by remember(votoEsistente) { mutableStateOf(votoEsistente?.voto?.note ?: "") }
+    var dataText by remember(votoEsistente) { mutableStateOf(votoEsistente?.voto?.data ?: "") }
     var selectedDateMillis by remember { mutableStateOf<Long?>(null) }
     var showDatePicker by remember { mutableStateOf(false) }
+    var confermaEliminazione by remember { mutableStateOf(false) }
 
     val votoOptions = remember { (18..30).map { it.toString() } + "30 e Lode" }
     val tipologiaOptions = listOf("Orale", "Scritto", "Pratico")
 
-    val canSave = materia.trim().isNotEmpty() &&
-            votoLabel.isNotEmpty() &&
-            dataText.isNotEmpty() &&
-            tipologia.isNotEmpty()
+    val canSave = votoLabel.isNotEmpty() && dataText.isNotEmpty() && tipologia.isNotEmpty()
 
     @Composable
     fun campoColors() = OutlinedTextFieldDefaults.colors(
@@ -349,16 +449,7 @@ private fun AggiungiVotoBottomSheet(
     fun salvaEChiudi() {
         if (!canSave) return
         val votoValore = if (votoLabel == "30 e Lode") 31 else votoLabel.toIntOrNull() ?: return
-        onSave(
-            Voto(
-                materia = materia.trim(),
-                voto = votoValore,
-                data = dataText,
-                descrizione = tipologia,
-                note = note.trim()
-            )
-        )
-        onDismiss()
+        onSave(votoValore, dataText, tipologia, note.trim())
     }
 
     ModalBottomSheet(
@@ -372,22 +463,16 @@ private fun AggiungiVotoBottomSheet(
                 .verticalScroll(rememberScrollState())
         ) {
             Text(
-                "Aggiungi voto",
+                text = if (votoEsistente == null) "Nuovo voto" else "Modifica voto",
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.padding(vertical = 12.dp)
+                fontWeight = FontWeight.SemiBold
             )
-
-            OutlinedTextField(
-                value = materia,
-                onValueChange = { materia = it },
-                label = { Text("Materia") },
-                singleLine = true,
-                colors = campoColors(),
-                modifier = Modifier.fillMaxWidth()
+            Text(
+                text = nomeMateria,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(bottom = 12.dp)
             )
-
-            Spacer(Modifier.height(12.dp))
 
             CampoDropdown(
                 label = "Voto",
@@ -410,8 +495,6 @@ private fun AggiungiVotoBottomSheet(
                     colors = campoColors(),
                     modifier = Modifier.fillMaxWidth()
                 )
-                // Overlay trasparente: intercetta il tap e apre il calendario
-                // (il campo resta readOnly, niente tastiera).
                 Box(
                     modifier = Modifier
                         .matchParentSize()
@@ -451,6 +534,16 @@ private fun AggiungiVotoBottomSheet(
             ) {
                 Text("Salva voto")
             }
+
+            if (votoEsistente != null) {
+                Spacer(Modifier.height(8.dp))
+                TextButton(
+                    onClick = { confermaEliminazione = true },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Elimina voto", color = BrandRed)
+                }
+            }
         }
     }
 
@@ -473,6 +566,23 @@ private fun AggiungiVotoBottomSheet(
         ) {
             DatePicker(state = datePickerState)
         }
+    }
+
+    if (confermaEliminazione) {
+        AlertDialog(
+            onDismissRequest = { confermaEliminazione = false },
+            title = { Text("Eliminare questo voto?") },
+            text = { Text(nomeMateria) },
+            confirmButton = {
+                TextButton(onClick = {
+                    confermaEliminazione = false
+                    onElimina()
+                }) { Text("Elimina", color = BrandRed) }
+            },
+            dismissButton = {
+                TextButton(onClick = { confermaEliminazione = false }) { Text("Annulla") }
+            }
+        )
     }
 }
 
@@ -523,16 +633,14 @@ private fun CampoDropdown(
     }
 }
 
-/** 31 è la codifica interna di "30 e Lode" (nessuna modifica allo schema Room). */
-private fun valoreNumerico(voto: Int): Int = if (voto == 31) 30 else voto
-
-private fun etichettaVoto(voto: Int): String = if (voto == 31) "30L" else voto.toString()
-
-private fun etichettaVotoEstesa(voto: Int): String = if (voto == 31) "30 e Lode" else voto.toString()
-
 private fun formattaDataMillis(millis: Long): String {
-    // Il DatePicker restituisce millis UTC a mezzanotte del giorno selezionato:
-    // uso ZoneOffset.UTC per evitare lo sfasamento di un giorno col fuso locale.
     val date = Instant.ofEpochMilli(millis).atZone(ZoneOffset.UTC).toLocalDate()
     return date.format(DateTimeFormatter.ofPattern("dd/MM/yyyy", Locale.ITALIAN))
 }
+
+/** 31 è la codifica interna di "30 e Lode" (nessuna modifica allo schema Room). */
+internal fun valoreNumerico(voto: Int): Int = if (voto == 31) 30 else voto
+
+internal fun etichettaVoto(voto: Int): String = if (voto == 31) "30L" else voto.toString()
+
+internal fun etichettaVotoEstesa(voto: Int): String = if (voto == 31) "30 e Lode" else voto.toString()

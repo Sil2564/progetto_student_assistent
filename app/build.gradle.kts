@@ -42,6 +42,10 @@ android {
     }
 }
 
+kapt {
+    correctErrorTypes = true
+}
+
 dependencies {
 
     implementation(libs.androidx.core.ktx)
@@ -66,9 +70,12 @@ dependencies {
 
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
 
-    implementation("androidx.room:room-runtime:2.8.4")
-    kapt("androidx.room:room-compiler:2.8.4")
-    implementation("androidx.room:room-ktx:2.8.4")
+    implementation(libs.room.runtime)
+    kapt(libs.room.compiler)
+    implementation(libs.room.ktx)
+
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.gson)
 
     // Caricamento immagini (foto degli appunti)
     implementation("io.coil-kt:coil-compose:2.6.0")

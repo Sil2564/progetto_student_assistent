@@ -14,4 +14,7 @@ interface VotoDao {
 
     @Query("SELECT * FROM voti ORDER BY data DESC")
     fun getAllVoti(): Flow<List<Voto>>
+
+    @Query("SELECT * FROM voti WHERE materiaId = :materiaId ORDER BY data DESC")
+    fun getVotiByMateria(materiaId: Long): Flow<List<Voto>>
 }

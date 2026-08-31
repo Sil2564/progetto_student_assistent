@@ -10,6 +10,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.silvianikikarim.studentassistant.viewmodel.AppuntiViewModel
 import com.silvianikikarim.studentassistant.viewmodel.VotoViewModel
 import com.silvianikikarim.studentassistant.viewmodel.SettingsViewModel
+import com.silvianikikarim.studentassistant.viewmodel.ConsigliViewModel
 import com.silvianikikarim.studentassistant.ui.settings.SettingsScreen
 
 /**
@@ -21,7 +22,8 @@ import com.silvianikikarim.studentassistant.ui.settings.SettingsScreen
 @Composable
 fun AppNavigation(
     votoViewModel: VotoViewModel,
-    appuntiViewModel: AppuntiViewModel
+    appuntiViewModel: AppuntiViewModel,
+    consigliViewModel: ConsigliViewModel
 ) {
     // Inizializziamo il controller della navigazione
     val navController = rememberNavController()
@@ -43,6 +45,14 @@ fun AppNavigation(
 
         composable(Routes.APPUNTI) {
             AppuntiScreen(navController, appuntiViewModel)
+        }
+
+        composable(
+            route = Routes.APPUNTI_ANNO,
+            arguments = listOf(navArgument("anno") { type = NavType.IntType })
+        ) { backStackEntry ->
+            val anno = backStackEntry.arguments?.getInt("anno") ?: 1
+            AppuntiAnnoScreen(anno, navController, appuntiViewModel)
         }
 
         composable(
@@ -75,7 +85,7 @@ fun AppNavigation(
         }
 
         composable(Routes.CONSIGLI) {
-            ConsigliScreen(navController)
+            ConsigliScreen(navController, consigliViewModel)
         }
 
         // ---- SEZIONE IMPOSTAZIONI ----
