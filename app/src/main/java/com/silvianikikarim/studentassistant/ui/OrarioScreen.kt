@@ -347,8 +347,8 @@ private fun clampSelectedDateToMonth(selected: LocalDate, month: YearMonth): Loc
  * Genera dinamicamente le lezioni dell'anno corrente basate sul mese visualizzato,
  * rispettando i veri semestri accademici (nessuna lezione a Luglio/Agosto).
  *
- * NOTA: i nomi usati qui sono allineati a MaterieAnnoCorrente.secondoAnno
- * (materie con formato "da lezione settimanale"). Se l'anno corrente
+ * NOTA: i nomi usati qui sono allineati a MaterieCorso.tutte (materie del
+ * 2° anno, quelle con formato "da lezione settimanale"). Se l'anno corrente
  * dell'utente è diverso, vanno aggiornati qui a mano.
  */
 private fun generateFakeLessons(month: YearMonth): List<LessonEvent> {

@@ -48,14 +48,6 @@ fun AppNavigation(
         }
 
         composable(
-            route = Routes.APPUNTI_ANNO,
-            arguments = listOf(navArgument("anno") { type = NavType.IntType })
-        ) { backStackEntry ->
-            val anno = backStackEntry.arguments?.getInt("anno") ?: 1
-            AppuntiAnnoScreen(anno, navController, appuntiViewModel)
-        }
-
-        composable(
             route = Routes.APPUNTI_MATERIA,
             arguments = listOf(navArgument("materiaId") { type = NavType.LongType })
         ) { backStackEntry ->
@@ -98,7 +90,7 @@ fun AppNavigation(
                 factory = com.silvianikikarim.studentassistant.viewmodel.SettingsViewModelFactory(settingsDataStore)
             )
             com.silvianikikarim.studentassistant.ui.settings.SettingsScreen(
-                settingsViewModel = settingsViewModel, 
+                settingsViewModel = settingsViewModel,
                 votoViewModel = votoViewModel,
                 navController = navController
             )

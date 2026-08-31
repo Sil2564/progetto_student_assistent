@@ -9,38 +9,41 @@ data class MateriaSeed(val nome: String, val anno: Int)
  * Appunti e Andamento partono già con l'elenco completo, senza che l'utente
  * debba ricrearle a mano.
  *
- * Le materie del 2° anno (quello corrente) sono le stesse che compaiono
- * nell'Orario delle lezioni (OrarioScreen.generateFakeLessons): se cambi i
- * nomi qui, aggiornali anche lì per restare coerenti.
- *
- * NOTA: se in futuro l'Orario diventa reale/editabile, questa lista statica
- * andrà sostituita leggendo le materie direttamente dalle lezioni salvate.
+ * Le materie del 2° anno sono le stesse che compaiono nell'Orario delle
+ * lezioni (OrarioScreen.generateFakeLessons): se cambi i nomi qui,
+ * aggiornali anche lì per restare coerenti.
  */
 object MaterieCorso {
     val tutte: List<MateriaSeed> = listOf(
         // ---- 1° Anno ----
-        MateriaSeed("Analisi Matematica", 1),
-        MateriaSeed("Programmazione I", 1),
-        MateriaSeed("Fisica Generale", 1),
+        MateriaSeed("Elementi di Architetture degli Elaboratori e Sistemi Operativi", 1),
+        MateriaSeed("Elementi di Matematica per l'Informatica", 1),
+        MateriaSeed("Programmazione", 1),
+        MateriaSeed("Reti di Calcolatori e Programmazione di Rete", 1),
         MateriaSeed("Basi di Dati", 1),
-        MateriaSeed("Elettronica Digitale", 1),
-        MateriaSeed("Inglese Tecnico", 1),
+        MateriaSeed("Fondamenti di Sistemi Web", 1),
+        MateriaSeed("Idoneità Lingua Inglese B - 1", 1),
+        MateriaSeed("Sistemi Virtualizzati", 1),
+        MateriaSeed("Sperimentazione Fisica, Elettronica e Sensoristica per Informatica", 1),
 
         // ---- 2° Anno (anno corrente, allineato all'Orario) ----
-        MateriaSeed("Ingegneria del Software", 2),
-        MateriaSeed("Sistemi Cloud", 2),
-        MateriaSeed("Reti di Calcolatori", 2),
-        MateriaSeed("Sicurezza dei Sistemi", 2),
-        MateriaSeed("Sistemi Mobili", 2),
-        MateriaSeed("Tecnologie Web", 2),
-        MateriaSeed("Data Science", 2),
+        MateriaSeed("Algoritmi e Strutture Dati", 2),
+        MateriaSeed("Ingegneria dei Sistemi Web", 2),
+        MateriaSeed("Laboratorio di Big Data, Data Mining e Data Analytics", 2),
+        MateriaSeed("Laboratorio di Sistemi Embedded e IoT", 2),
+        MateriaSeed("Progettazione e Sviluppo del Software", 2),
+        MateriaSeed("Laboratorio di Ottimizzazione, Intelligenza Artificiale e Machine Learning", 2),
+        MateriaSeed("Laboratorio di Piattaforme e Metodologie di Sviluppo Cloud", 2),
+        MateriaSeed("Laboratorio di Programmazione di Sistemi Mobili", 2),
+        MateriaSeed("Laboratorio di Sicurezza dei Sistemi e Privacy", 2),
+        MateriaSeed("Laboratorio di Sistemi di Rete", 2),
 
         // ---- 3° Anno ----
-        MateriaSeed("Intelligenza Artificiale", 3),
-        MateriaSeed("Machine Learning", 3),
-        MateriaSeed("Sviluppo Mobile Avanzato", 3),
-        MateriaSeed("Cybersecurity Avanzata", 3),
-        MateriaSeed("Cloud Native Architecture", 3),
-        MateriaSeed("Project Work", 3)
+        MateriaSeed("Laboratorio di Interfaccia Uomo-Macchina", 3),
+        MateriaSeed("Primo Tirocinio Pratico Valutativo", 3),
+        MateriaSeed("Secondo Tirocinio Pratico Valutativo", 3),
+        MateriaSeed("Prova Finale", 3),
+        MateriaSeed("Prova Pratica Valutativa (PPV) - Abilitante alla Sezione Informatica", 3),
+        MateriaSeed("Laboratorio di Piattaforme di Sviluppo per Automazione - CE", 3)
     )
 }

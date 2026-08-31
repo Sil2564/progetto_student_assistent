@@ -31,7 +31,7 @@ import com.silvianikikarim.studentassistant.viewmodel.AppuntiViewModel
  * CalendarioStudioScreen: stessa palette (BrandRed / SurfaceSoft), stesse
  * forme arrotondate e stesso linguaggio di card ed empty-state.
  *
- * NOTA: le materie sono un elenco fisso (vedi MaterieAnnoCorrente, seminato
+ * NOTA: le materie sono un elenco fisso (vedi MaterieCorso.tutte, seminato
  * all'avvio in MainActivity): qui NON è più possibile aggiungerne di nuove
  * a testo libero, per evitare duplicati/refusi rispetto al piano di studi
  * ufficiale. Il metodo AppuntiRepository.inserisciMateria resta disponibile

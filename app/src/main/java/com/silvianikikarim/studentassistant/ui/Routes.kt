@@ -5,8 +5,6 @@ object Routes {
     const val ORARIO = "orario"
 
     const val APPUNTI = "appunti"
-    // {anno} = 1, 2 o 3: mostra le materie di quell'anno
-    const val APPUNTI_ANNO = "appunti/anno/{anno}"
     // {materiaId} = id della Materia di cui mostrare la lista di note
     const val APPUNTI_MATERIA = "appunti/{materiaId}"
     // {notaId} = 0L per una nota NUOVA, altrimenti id della nota da modificare
@@ -19,8 +17,6 @@ object Routes {
 
     // Costante usata al posto di un id reale per indicare "nota non ancora creata"
     const val NOTA_ID_NUOVA = 0L
-
-    fun appuntiAnno(anno: Int) = "appunti/anno/$anno"
 
     fun appuntiMateria(materiaId: Long) = "appunti/$materiaId"
 
