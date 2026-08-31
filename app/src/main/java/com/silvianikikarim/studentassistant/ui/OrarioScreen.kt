@@ -39,7 +39,8 @@ private data class LessonEvent(
     val title: String,
     val start: String,
     val end: String,
-    val room: String
+    val room: String,
+    val professor: String
 )
 
 /**
@@ -52,6 +53,7 @@ private data class LessonEvent(
 fun OrarioScreen(navController: NavController, modifier: Modifier = Modifier) {
     var shownMonth by remember { mutableStateOf(YearMonth.now()) }
     var selectedDate by remember { mutableStateOf(LocalDate.now()) }
+    var selectedLessonForPopup by remember { mutableStateOf<LessonEvent?>(null) }
 
     // Genera automaticamente un finto orario del 3° anno basato sul mese corrente.
     val allLessons = remember(shownMonth) { generateFakeLessons(shownMonth) }
@@ -144,21 +146,50 @@ fun OrarioScreen(navController: NavController, modifier: Modifier = Modifier) {
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     items(selectedLessons, key = { it.id }) { lesson ->
-                        LessonRowCard(lesson = lesson)
+                        LessonRowCard(lesson = lesson) {
+                            selectedLessonForPopup = lesson
+                        }
                     }
                 }
             }
         }
     }
+
+    // Popup Dettagli Lezione
+    if (selectedLessonForPopup != null) {
+        val lesson = selectedLessonForPopup!!
+        AlertDialog(
+            onDismissRequest = { selectedLessonForPopup = null },
+            title = { Text(lesson.title, fontWeight = FontWeight.Bold) },
+            text = {
+                Column {
+                    Text("Docente: ${lesson.professor}", style = MaterialTheme.typography.bodyLarge)
+                    Spacer(Modifier.height(8.dp))
+                    Text("Orario: ${lesson.start} - ${lesson.end}", style = MaterialTheme.typography.bodyMedium)
+                    Spacer(Modifier.height(4.dp))
+                    Text("Luogo: ${lesson.room}", style = MaterialTheme.typography.bodyMedium)
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { selectedLessonForPopup = null }) {
+                    Text("Chiudi", color = BrandRed, fontWeight = FontWeight.Bold)
+                }
+            },
+            containerColor = Color.White,
+            shape = RoundedCornerShape(16.dp)
+        )
+    }
 }
 
 @Composable
-private fun LessonRowCard(lesson: LessonEvent) {
+private fun LessonRowCard(lesson: LessonEvent, onClick: () -> Unit) {
     Card(
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = SurfaceSoft),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() }
     ) {
         Row(
             modifier = Modifier.padding(14.dp),
@@ -365,27 +396,27 @@ private fun generateFakeLessons(month: YearMonth): List<LessonEvent> {
         if (isFirstSemester) {
             when (current.dayOfWeek) {
                 DayOfWeek.MONDAY -> {
-                    events.add(LessonEvent(UUID.randomUUID().toString(), current, "Ingegneria del Software", "09:00", "12:00", "Campus Cesena - Aula 2.1"))
-                    events.add(LessonEvent(UUID.randomUUID().toString(), current, "Sistemi Cloud", "14:00", "17:00", "Campus Cesena - Aula 1.4"))
+                    events.add(LessonEvent(UUID.randomUUID().toString(), current, "Ingegneria del Software", "09:00", "12:00", "Campus Cesena - Aula 2.1", "Prof. Ciancarini"))
+                    events.add(LessonEvent(UUID.randomUUID().toString(), current, "Sistemi Cloud", "14:00", "17:00", "Campus Cesena - Aula 1.4", "Prof. Bellavista"))
                 }
                 DayOfWeek.WEDNESDAY -> {
-                    events.add(LessonEvent(UUID.randomUUID().toString(), current, "Reti di Calcolatori", "10:00", "13:00", "Campus Cesena - Aula 3.1"))
+                    events.add(LessonEvent(UUID.randomUUID().toString(), current, "Reti di Calcolatori", "10:00", "13:00", "Campus Cesena - Aula 3.1", "Prof. Callegati"))
                 }
                 DayOfWeek.THURSDAY -> {
-                    events.add(LessonEvent(UUID.randomUUID().toString(), current, "Sicurezza dei Sistemi", "09:00", "11:00", "Campus Cesena - Lab 1"))
+                    events.add(LessonEvent(UUID.randomUUID().toString(), current, "Sicurezza dei Sistemi", "09:00", "11:00", "Campus Cesena - Lab 1", "Prof. Ferrara"))
                 }
                 else -> {}
             }
         } else if (isSecondSemester) {
             when (current.dayOfWeek) {
                 DayOfWeek.TUESDAY -> {
-                    events.add(LessonEvent(UUID.randomUUID().toString(), current, "Sistemi Mobili", "09:00", "13:00", "Campus Cesena - Lab 3"))
+                    events.add(LessonEvent(UUID.randomUUID().toString(), current, "Sistemi Mobili", "09:00", "13:00", "Campus Cesena - Lab 3", "Prof. Corradi"))
                 }
                 DayOfWeek.WEDNESDAY -> {
-                    events.add(LessonEvent(UUID.randomUUID().toString(), current, "Tecnologie Web", "14:00", "17:00", "Campus Cesena - Aula 2.2"))
+                    events.add(LessonEvent(UUID.randomUUID().toString(), current, "Tecnologie Web", "14:00", "17:00", "Campus Cesena - Aula 2.2", "Prof. Vitali"))
                 }
                 DayOfWeek.FRIDAY -> {
-                    events.add(LessonEvent(UUID.randomUUID().toString(), current, "Data Science", "09:00", "12:00", "Campus Cesena - Aula 1.1"))
+                    events.add(LessonEvent(UUID.randomUUID().toString(), current, "Data Science", "09:00", "12:00", "Campus Cesena - Aula 1.1", "Prof. Golfarelli"))
                 }
                 else -> {}
             }
