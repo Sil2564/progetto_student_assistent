@@ -32,9 +32,23 @@ class VotoRepository(
     /** Voti di UNA sola materia (usato nella schermata di dettaglio materia). */
     fun votiByMateria(materiaId: Long): Flow<List<Voto>> = votoDao.getVotiByMateria(materiaId)
 
-    suspend fun inserisciPerMateria(materiaId: Long, voto: Int, data: String, descrizione: String, note: String) {
+    /**
+     * Salva il voto di una materia. Se idEsistente è diverso da 0, sovrascrive
+     * quel voto (modifica); altrimenti ne crea uno nuovo. Serve per il vincolo
+     * "un solo voto per materia": la UI passa sempre l'id del voto già presente
+     * per quella materia, se c'è.
+     */
+    suspend fun inserisciPerMateria(
+        materiaId: Long,
+        voto: Int,
+        data: String,
+        descrizione: String,
+        note: String,
+        idEsistente: Int = 0
+    ) {
         votoDao.insertVoto(
             Voto(
+                id = idEsistente,
                 materiaId = materiaId,
                 voto = voto,
                 data = data,

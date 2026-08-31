@@ -12,8 +12,6 @@ object Routes {
 
     const val CALENDARIO_STUDIO = "calendario_studio"
     const val ANDAMENTO = "andamento"
-    // {materiaId} = id della Materia di cui mostrare/aggiungere i voti
-    const val ANDAMENTO_MATERIA = "andamento/{materiaId}"
     const val CONSIGLI = "consigli"
     const val IMPOSTAZIONI = "impostazioni"
 
@@ -24,8 +22,6 @@ object Routes {
 
     fun appuntiNota(materiaId: Long, notaId: Long = NOTA_ID_NUOVA) =
         "appunti/$materiaId/nota/$notaId"
-
-    fun andamentoMateria(materiaId: Long) = "andamento/$materiaId"
 
     // Sub-schermate Impostazioni
     const val PROFILO = "profilo"

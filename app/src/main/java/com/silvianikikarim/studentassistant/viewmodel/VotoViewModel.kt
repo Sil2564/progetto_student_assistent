@@ -6,7 +6,6 @@ import com.silvianikikarim.studentassistant.model.Materia
 import com.silvianikikarim.studentassistant.model.Voto
 import com.silvianikikarim.studentassistant.model.VotoConMateria
 import com.silvianikikarim.studentassistant.repository.VotoRepository
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
@@ -22,13 +21,11 @@ class VotoViewModel(private val repository: VotoRepository) : ViewModel() {
     val votiConMateria: StateFlow<List<VotoConMateria>> = repository.votiConMateria
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    /** Flow "grezzo" per materia: la screen di dettaglio lo colleziona con collectAsState(). */
-    fun votiByMateria(materiaId: Long): Flow<List<Voto>> = repository.votiByMateria(materiaId)
-
-    /** Salva un voto per una materia già esistente e scelta dall'elenco (nessun testo libero). */
-    fun inserisciVoto(materiaId: Long, voto: Int, data: String, descrizione: String, note: String) {
+    /** Salva un voto per una materia già esistente e scelta dall'elenco (nessun testo libero).
+     *  Se idEsistente è diverso da 0, modifica quel voto invece di crearne uno nuovo. */
+    fun inserisciVoto(materiaId: Long, voto: Int, data: String, descrizione: String, note: String, idEsistente: Int = 0) {
         viewModelScope.launch {
-            repository.inserisciPerMateria(materiaId, voto, data, descrizione, note)
+            repository.inserisciPerMateria(materiaId, voto, data, descrizione, note, idEsistente)
         }
     }
 

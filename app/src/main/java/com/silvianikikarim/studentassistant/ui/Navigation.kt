@@ -76,14 +76,6 @@ fun AppNavigation(
             AndamentoScreen(votoViewModel, navController)
         }
 
-        composable(
-            route = Routes.ANDAMENTO_MATERIA,
-            arguments = listOf(navArgument("materiaId") { type = NavType.LongType })
-        ) { backStackEntry ->
-            val materiaId = backStackEntry.arguments?.getLong("materiaId") ?: 0L
-            MateriaAndamentoScreen(materiaId, navController, votoViewModel)
-        }
-
         composable(Routes.CONSIGLI) {
             ConsigliScreen(navController, consigliViewModel)
         }

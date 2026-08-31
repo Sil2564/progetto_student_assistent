@@ -45,6 +45,14 @@ fun ConsigliScreen(navController: NavController, viewModel: ConsigliViewModel) {
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             item {
+                Text(
+                    text = "Frase del giorno",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold
+                )
+            }
+
+            item {
                 FraseDelGiornoCard(
                     stato = statoFrase,
                     onRiprova = { viewModel.caricaFraseDelGiorno() }

@@ -8,10 +8,10 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ChevronRight
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -41,7 +41,6 @@ fun AppuntiScreen(
     val materie by appuntiViewModel.tutteLeMaterie.collectAsState()
 
     var showAddDialog by remember { mutableStateOf(false) }
-    var materiaDaEliminare by remember { mutableStateOf<Materia?>(null) }
 
     if (showAddDialog) {
         AddMateriaDialog(
@@ -53,27 +52,15 @@ fun AppuntiScreen(
         )
     }
 
-    materiaDaEliminare?.let { materia ->
-        AlertDialog(
-            onDismissRequest = { materiaDaEliminare = null },
-            title = { Text("Eliminare \"${materia.nome}\"?") },
-            text = { Text("Verranno eliminati anche tutti gli appunti contenuti in questa materia.") },
-            confirmButton = {
-                TextButton(onClick = {
-                    appuntiViewModel.eliminaMateria(materia)
-                    materiaDaEliminare = null
-                }) { Text("Elimina", color = BrandRed) }
-            },
-            dismissButton = {
-                TextButton(onClick = { materiaDaEliminare = null }) { Text("Annulla") }
-            }
-        )
-    }
-
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("I miei Appunti", fontWeight = FontWeight.SemiBold) },
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Indietro")
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = Color.White,
                     titleContentColor = MaterialTheme.colorScheme.onSurface
@@ -117,8 +104,7 @@ fun AppuntiScreen(
                     items(materie, key = { it.id }) { materia ->
                         MateriaRowCard(
                             materia = materia,
-                            onClick = { navController.navigate(Routes.appuntiMateria(materia.id)) },
-                            onDelete = { materiaDaEliminare = materia }
+                            onClick = { navController.navigate(Routes.appuntiMateria(materia.id)) }
                         )
                     }
                 }
@@ -130,8 +116,7 @@ fun AppuntiScreen(
 @Composable
 private fun MateriaRowCard(
     materia: Materia,
-    onClick: () -> Unit,
-    onDelete: () -> Unit
+    onClick: () -> Unit
 ) {
     Card(
         shape = RoundedCornerShape(16.dp),
@@ -167,14 +152,6 @@ private fun MateriaRowCard(
                 fontWeight = FontWeight.SemiBold,
                 modifier = Modifier.weight(1f)
             )
-
-            IconButton(onClick = onDelete) {
-                Icon(
-                    Icons.Filled.Delete,
-                    contentDescription = "Elimina materia",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
 
             Icon(
                 Icons.Filled.ChevronRight,
