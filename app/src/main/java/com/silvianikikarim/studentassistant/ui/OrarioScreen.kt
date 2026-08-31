@@ -55,9 +55,9 @@ fun OrarioScreen(navController: NavController, modifier: Modifier = Modifier) {
 
     // Genera automaticamente un finto orario del 3° anno basato sul mese corrente.
     val allLessons = remember(shownMonth) { generateFakeLessons(shownMonth) }
-    
+
     val lessonsByDate = remember(allLessons) { allLessons.groupBy { it.date } }
-    
+
     val selectedLessons = remember(selectedDate, lessonsByDate) {
         (lessonsByDate[selectedDate] ?: emptyList()).sortedBy { it.start }
     }
@@ -344,48 +344,52 @@ private fun clampSelectedDateToMonth(selected: LocalDate, month: YearMonth): Loc
 }
 
 /**
- * Genera dinamicamente le lezioni del 3° anno basate sul mese visualizzato,
+ * Genera dinamicamente le lezioni dell'anno corrente basate sul mese visualizzato,
  * rispettando i veri semestri accademici (nessuna lezione a Luglio/Agosto).
+ *
+ * NOTA: i nomi usati qui sono allineati a MaterieAnnoCorrente.secondoAnno
+ * (materie con formato "da lezione settimanale"). Se l'anno corrente
+ * dell'utente è diverso, vanno aggiornati qui a mano.
  */
 private fun generateFakeLessons(month: YearMonth): List<LessonEvent> {
     val events = mutableListOf<LessonEvent>()
-    
+
     // Controlliamo se siamo in un mese di lezione (Primo semestre: Sett-Dic, Secondo semestre: Feb-Mag)
     val isFirstSemester = month.monthValue in 9..12
     val isSecondSemester = month.monthValue in 2..5
-    
+
     // Se siamo nei mesi di pausa (Gennaio, Giugno, Luglio, Agosto), non ci sono lezioni
     if (!isFirstSemester && !isSecondSemester) return emptyList()
 
     val firstDay = month.atDay(1)
     val lastDay = month.atEndOfMonth()
-    
+
     var current = firstDay
     while (!current.isAfter(lastDay)) {
         if (isFirstSemester) {
             when (current.dayOfWeek) {
                 DayOfWeek.MONDAY -> {
-                    events.add(LessonEvent(UUID.randomUUID().toString(), current, "Ingegneria del Software", "09:00", "12:00", "Campus Cesena - Aula 2.1"))
-                    events.add(LessonEvent(UUID.randomUUID().toString(), current, "Sistemi Cloud", "14:00", "17:00", "Campus Cesena - Aula 1.4"))
+                    events.add(LessonEvent(UUID.randomUUID().toString(), current, "Algoritmi e Strutture Dati", "09:00", "12:00", "Campus Cesena - Aula 2.1"))
+                    events.add(LessonEvent(UUID.randomUUID().toString(), current, "Ingegneria dei Sistemi Web", "14:00", "17:00", "Campus Cesena - Aula 1.4"))
                 }
                 DayOfWeek.WEDNESDAY -> {
-                    events.add(LessonEvent(UUID.randomUUID().toString(), current, "Reti di Calcolatori", "10:00", "13:00", "Campus Cesena - Aula 3.1"))
+                    events.add(LessonEvent(UUID.randomUUID().toString(), current, "Laboratorio di Sistemi di Rete", "10:00", "13:00", "Campus Cesena - Aula 3.1"))
                 }
                 DayOfWeek.THURSDAY -> {
-                    events.add(LessonEvent(UUID.randomUUID().toString(), current, "Sicurezza dei Sistemi", "09:00", "11:00", "Campus Cesena - Lab 1"))
+                    events.add(LessonEvent(UUID.randomUUID().toString(), current, "Laboratorio di Sicurezza dei Sistemi e Privacy", "09:00", "11:00", "Campus Cesena - Lab 1"))
                 }
                 else -> {}
             }
         } else if (isSecondSemester) {
             when (current.dayOfWeek) {
                 DayOfWeek.TUESDAY -> {
-                    events.add(LessonEvent(UUID.randomUUID().toString(), current, "Sistemi Mobili", "09:00", "13:00", "Campus Cesena - Lab 3"))
+                    events.add(LessonEvent(UUID.randomUUID().toString(), current, "Laboratorio di Programmazione di Sistemi Mobili", "09:00", "13:00", "Campus Cesena - Lab 3"))
                 }
                 DayOfWeek.WEDNESDAY -> {
-                    events.add(LessonEvent(UUID.randomUUID().toString(), current, "Tecnologie Web", "14:00", "17:00", "Campus Cesena - Aula 2.2"))
+                    events.add(LessonEvent(UUID.randomUUID().toString(), current, "Progettazione e Sviluppo del Software", "14:00", "17:00", "Campus Cesena - Aula 2.2"))
                 }
                 DayOfWeek.FRIDAY -> {
-                    events.add(LessonEvent(UUID.randomUUID().toString(), current, "Data Science", "09:00", "12:00", "Campus Cesena - Aula 1.1"))
+                    events.add(LessonEvent(UUID.randomUUID().toString(), current, "Laboratorio di Big Data, Data Mining e Data Analytics", "09:00", "12:00", "Campus Cesena - Aula 1.1"))
                 }
                 else -> {}
             }

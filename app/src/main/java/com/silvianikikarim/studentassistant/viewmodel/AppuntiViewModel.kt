@@ -16,9 +16,9 @@ class AppuntiViewModel(private val repository: AppuntiRepository) : ViewModel() 
     val tutteLeMaterie: StateFlow<List<Materia>> = repository.tutteLeMaterie
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    fun inserisciMateria(nome: String) {
+    fun inserisciMateria(nome: String, anno: Int) {
         viewModelScope.launch {
-            repository.inserisciMateria(nome)
+            repository.inserisciMateria(nome, anno)
         }
     }
 

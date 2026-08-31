@@ -15,6 +15,8 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Grade
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -52,8 +54,14 @@ fun AndamentoScreen(viewModel: VotoViewModel, navController: NavController) {
 
     // Popola le materie dell'anno la prima volta (idempotente: non duplica se già presenti).
     LaunchedEffect(Unit) {
-        viewModel.seedMaterieAnnoCorrente()
+        viewModel.seedMaterieCorso()
     }
+
+    // Materie raggruppate per anno di corso (1°, 2°, 3°), in ordine.
+    val materiePerAnno = remember(materie) { materie.groupBy { it.anno }.toSortedMap() }
+
+    // Quali sezioni "Anno" sono aperte: il 2° anno (quello corrente) parte già espanso.
+    var anniEspansi by remember { mutableStateOf(setOf(2)) }
 
     // Al massimo un voto per materia: mappa diretta materiaId -> il suo unico voto (se c'è).
     val votoPerMateriaId = remember(votiConMateria) {
@@ -131,12 +139,30 @@ fun AndamentoScreen(viewModel: VotoViewModel, navController: NavController) {
                     contentPadding = PaddingValues(bottom = 96.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    items(materie, key = { it.id }) { materia ->
-                        MateriaAndamentoRowCard(
-                            materia = materia,
-                            votoMateria = votoPerMateriaId[materia.id],
-                            onClick = { materiaSelezionata = materia }
-                        )
+                    materiePerAnno.forEach { (anno, materieAnno) ->
+                        item(key = "header_$anno") {
+                            AnnoSectionHeader(
+                                anno = anno,
+                                numeroMaterie = materieAnno.size,
+                                espanso = anno in anniEspansi,
+                                onToggle = {
+                                    anniEspansi = if (anno in anniEspansi) {
+                                        anniEspansi - anno
+                                    } else {
+                                        anniEspansi + anno
+                                    }
+                                }
+                            )
+                        }
+                        if (anno in anniEspansi) {
+                            items(materieAnno, key = { it.id }) { materia ->
+                                MateriaAndamentoRowCard(
+                                    materia = materia,
+                                    votoMateria = votoPerMateriaId[materia.id],
+                                    onClick = { materiaSelezionata = materia }
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -220,6 +246,56 @@ private fun MediaGeneraleCard(voti: List<VotoConMateria>) {
             }
         }
     }
+}
+
+@Composable
+private fun AnnoSectionHeader(
+    anno: Int,
+    numeroMaterie: Int,
+    espanso: Boolean,
+    onToggle: () -> Unit
+) {
+    Card(
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(containerColor = BrandRed.copy(alpha = 0.08f)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onToggle)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(Modifier.weight(1f)) {
+                Text(
+                    text = etichettaAnno(anno),
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    color = BrandRed
+                )
+                Text(
+                    text = "$numeroMaterie " + if (numeroMaterie == 1) "materia" else "materie",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Icon(
+                imageVector = if (espanso) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
+                contentDescription = if (espanso) "Comprimi" else "Espandi",
+                tint = BrandRed
+            )
+        }
+    }
+}
+
+private fun etichettaAnno(anno: Int): String = when (anno) {
+    1 -> "1° Anno"
+    2 -> "2° Anno"
+    3 -> "3° Anno"
+    else -> "Anno $anno"
 }
 
 @Composable

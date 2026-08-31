@@ -12,7 +12,7 @@ class AppuntiRepository(
     val tutteLeMaterie: Flow<List<Materia>> = materiaRepository.tutteLeMaterie
 
     /** Se una materia con questo nome esiste già (anche scritta diversamente), la riusa invece di duplicarla. */
-    suspend fun inserisciMateria(nome: String): Long = materiaRepository.getOrCreateMateria(nome)
+    suspend fun inserisciMateria(nome: String, anno: Int): Long = materiaRepository.getOrCreateMateria(nome, anno)
 
     suspend fun eliminaMateria(materia: Materia) = materiaRepository.eliminaMateria(materia)
 

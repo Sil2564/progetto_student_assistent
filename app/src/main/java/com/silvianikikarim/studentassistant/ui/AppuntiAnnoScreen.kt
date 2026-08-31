@@ -10,6 +10,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.MenuBook
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -26,29 +27,36 @@ import com.silvianikikarim.studentassistant.ui.theme.SurfaceSoft
 import com.silvianikikarim.studentassistant.viewmodel.AppuntiViewModel
 
 /**
- * Schermata "I miei Appunti": elenco delle materie, ognuna delle quali
- * contiene le proprie note (testo, immagini, PDF). Stile allineato a
- * CalendarioStudioScreen: stessa palette (BrandRed / SurfaceSoft), stesse
- * forme arrotondate e stesso linguaggio di card ed empty-state.
- *
- * NOTA: le materie sono un elenco fisso (vedi MaterieAnnoCorrente, seminato
- * all'avvio in MainActivity): qui NON è più possibile aggiungerne di nuove
- * a testo libero, per evitare duplicati/refusi rispetto al piano di studi
- * ufficiale. Il metodo AppuntiRepository.inserisciMateria resta disponibile
- * nel codice ma non è più raggiungibile da nessuna schermata.
+ * Elenco delle materie di UN singolo anno (1°, 2° o 3°). Stesso comportamento
+ * che prima viveva direttamente in AppuntiScreen quando esisteva solo il 2°
+ * anno: qui è parametrizzato sull'anno scelto nella schermata precedente.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AppuntiScreen(
+fun AppuntiAnnoScreen(
+    anno: Int,
     navController: NavController,
     appuntiViewModel: AppuntiViewModel
 ) {
-    val materie by appuntiViewModel.tutteLeMaterie.collectAsState()
+    val tutteLeMaterie by appuntiViewModel.tutteLeMaterie.collectAsState()
+    val materie = remember(tutteLeMaterie, anno) { tutteLeMaterie.filter { it.anno == anno } }
+
+    var showAddDialog by remember { mutableStateOf(false) }
+
+    if (showAddDialog) {
+        AddMateriaDialog(
+            onDismiss = { showAddDialog = false },
+            onSave = { nome ->
+                appuntiViewModel.inserisciMateria(nome, anno)
+                showAddDialog = false
+            }
+        )
+    }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("I miei Appunti", fontWeight = FontWeight.SemiBold) },
+                title = { Text(etichettaAnnoAppunti(anno), fontWeight = FontWeight.SemiBold) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Indietro")
@@ -59,6 +67,15 @@ fun AppuntiScreen(
                     titleContentColor = MaterialTheme.colorScheme.onSurface
                 )
             )
+        },
+        floatingActionButton = {
+            FloatingActionButton(
+                containerColor = BrandRed,
+                contentColor = Color.White,
+                onClick = { showAddDialog = true }
+            ) {
+                Icon(Icons.Filled.Add, contentDescription = "Aggiungi materia")
+            }
         }
     ) { innerPadding ->
         Column(
@@ -79,14 +96,14 @@ fun AppuntiScreen(
             Spacer(Modifier.height(12.dp))
 
             if (materie.isEmpty()) {
-                EmptyMaterieHint()
+                EmptyMaterieAnnoHint(onAdd = { showAddDialog = true })
             } else {
                 LazyColumn(
                     contentPadding = PaddingValues(bottom = 96.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     items(materie, key = { it.id }) { materia ->
-                        MateriaRowCard(
+                        MateriaAppuntiRowCard(
                             materia = materia,
                             onClick = { navController.navigate(Routes.appuntiMateria(materia.id)) }
                         )
@@ -98,7 +115,7 @@ fun AppuntiScreen(
 }
 
 @Composable
-private fun MateriaRowCard(
+private fun MateriaAppuntiRowCard(
     materia: Materia,
     onClick: () -> Unit
 ) {
@@ -147,7 +164,7 @@ private fun MateriaRowCard(
 }
 
 @Composable
-private fun EmptyMaterieHint() {
+private fun EmptyMaterieAnnoHint(onAdd: () -> Unit) {
     Card(
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = SurfaceSoft),
@@ -174,13 +191,63 @@ private fun EmptyMaterieHint() {
                 )
             }
             Spacer(Modifier.height(12.dp))
-            Text("Nessuna materia trovata.", fontWeight = FontWeight.SemiBold)
+            Text("Nessuna materia in questo anno.", fontWeight = FontWeight.SemiBold)
             Spacer(Modifier.height(6.dp))
             Text(
-                "Le materie del piano di studi vengono caricate automaticamente all'avvio dell'app.",
+                "Crea la tua prima materia per iniziare a raccogliere appunti, foto e PDF.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+            Spacer(Modifier.height(10.dp))
+            TextButton(onClick = onAdd) { Text("Aggiungi materia", color = BrandRed) }
         }
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun AddMateriaDialog(
+    onDismiss: () -> Unit,
+    onSave: (String) -> Unit
+) {
+    var nome by remember { mutableStateOf("") }
+    val canSave = nome.trim().isNotEmpty()
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Nuova materia") },
+        text = {
+            OutlinedTextField(
+                value = nome,
+                onValueChange = { nome = it },
+                label = { Text("Nome materia") },
+                singleLine = true,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = BrandRed,
+                    focusedLabelColor = BrandRed,
+                    cursorColor = BrandRed
+                )
+            )
+        },
+        confirmButton = {
+            TextButton(
+                onClick = { if (canSave) onSave(nome.trim()) },
+                enabled = canSave
+            ) { Text("Salva", color = if (canSave) BrandRed else MaterialTheme.colorScheme.onSurfaceVariant) }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("Annulla") }
+        }
+    )
+}
+
+/**
+ * Helper per visualizzare l'etichetta dell'anno (es. "1° Anno")
+ * nella top bar della schermata degli appunti.
+ */
+fun etichettaAnnoAppunti(anno: Int): String = when (anno) {
+    1 -> "1° Anno"
+    2 -> "2° Anno"
+    3 -> "3° Anno"
+    else -> "Anno $anno"
 }

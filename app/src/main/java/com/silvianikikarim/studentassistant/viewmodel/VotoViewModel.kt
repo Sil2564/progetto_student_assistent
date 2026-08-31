@@ -35,10 +35,10 @@ class VotoViewModel(private val repository: VotoRepository) : ViewModel() {
         }
     }
 
-    /** Popola la tabella materie condivisa con quelle dell'anno corrente (idempotente). */
-    fun seedMaterieAnnoCorrente() {
+    /** Popola la tabella materie condivisa con tutte quelle del piano di studi (idempotente). */
+    fun seedMaterieCorso() {
         viewModelScope.launch {
-            repository.seedMaterieAnnoCorrente()
+            repository.seedMaterieCorso()
         }
     }
 }

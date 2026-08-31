@@ -19,7 +19,7 @@ import androidx.room.TypeConverters
  */
 @Database(
     entities = [Materia::class, Nota::class, Voto::class],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 @TypeConverters(Converters::class)

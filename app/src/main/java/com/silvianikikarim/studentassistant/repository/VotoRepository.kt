@@ -62,9 +62,9 @@ class VotoRepository(
         votoDao.deleteVoto(voto)
     }
 
-    suspend fun seedMaterieAnnoCorrente() {
+    suspend fun seedMaterieCorso() {
         materiaRepository.seedMaterieSeNecessario(
-            com.silvianikikarim.studentassistant.model.MaterieAnnoCorrente.nomi
+            com.silvianikikarim.studentassistant.model.MaterieCorso.tutte
         )
     }
 }

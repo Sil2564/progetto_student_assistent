@@ -6,7 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.silvianikikarim.studentassistant.model.AppDatabase
-import com.silvianikikarim.studentassistant.model.MaterieAnnoCorrente
+import com.silvianikikarim.studentassistant.model.MaterieCorso
 import com.silvianikikarim.studentassistant.repository.AppuntiRepository
 import com.silvianikikarim.studentassistant.repository.MateriaRepository
 import com.silvianikikarim.studentassistant.repository.VotoRepository
@@ -36,12 +36,12 @@ class MainActivity : ComponentActivity() {
         val appDatabase = AppDatabase.getDatabase(applicationContext)
         val materiaRepository = MateriaRepository(appDatabase.materiaDao())
 
-        // Le materie "ufficiali" dell'anno (le stesse dell'Orario) vengono
-        // create una volta sola all'avvio: da qui in poi Andamento e Appunti
-        // le trovano già pronte, senza che l'utente debba inserirle a mano.
+        // Tutte le materie del piano di studi (1°, 2° e 3° anno) vengono create
+        // una volta sola all'avvio: da qui in poi Andamento e Appunti le
+        // trovano già pronte, senza che l'utente debba inserirle a mano.
         // Richiamarlo ad ogni avvio non crea duplicati (vedi getOrCreateMateria).
         lifecycleScope.launch {
-            materiaRepository.seedMaterieSeNecessario(MaterieAnnoCorrente.nomi)
+            materiaRepository.seedMaterieSeNecessario(MaterieCorso.tutte)
         }
 
         val votoRepository = VotoRepository(
