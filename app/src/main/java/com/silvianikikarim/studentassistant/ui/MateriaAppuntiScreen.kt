@@ -46,6 +46,7 @@ import com.silvianikikarim.studentassistant.ui.theme.BrandRed
 import com.silvianikikarim.studentassistant.ui.theme.SurfaceSoft
 import com.silvianikikarim.studentassistant.util.FileStorageHelper
 import com.silvianikikarim.studentassistant.viewmodel.AppuntiViewModel
+import kotlinx.coroutines.launch
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -59,6 +60,7 @@ fun MateriaAppuntiScreen(
     appuntiViewModel: AppuntiViewModel
 ) {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
 
     val materie by appuntiViewModel.tutteLeMaterie.collectAsState()
     val nomeMateria = materie.firstOrNull { it.id == materiaId }?.nome ?: ""
@@ -77,15 +79,17 @@ fun MateriaAppuntiScreen(
         contract = ActivityResultContracts.PickVisualMedia()
     ) { uri: Uri? ->
         if (uri != null) {
-            val path = FileStorageHelper.copiaUriInInterno(context, uri, "jpg")
-            appuntiViewModel.inserisciNota(
-                Nota(
-                    materiaId = materiaId,
-                    tipo = TipoNota.IMMAGINE,
-                    titolo = "Immagine ${formattaData(System.currentTimeMillis())}",
-                    percorsoFile = path
+            scope.launch {
+                val path = FileStorageHelper.copiaUriInInterno(context, uri, "jpg")
+                appuntiViewModel.inserisciNota(
+                    Nota(
+                        materiaId = materiaId,
+                        tipo = TipoNota.IMMAGINE,
+                        titolo = "Immagine ${formattaData(System.currentTimeMillis())}",
+                        percorsoFile = path
+                    )
                 )
-            )
+            }
         }
     }
 
@@ -94,15 +98,17 @@ fun MateriaAppuntiScreen(
         contract = ActivityResultContracts.OpenDocument()
     ) { uri: Uri? ->
         if (uri != null) {
-            val path = FileStorageHelper.copiaUriInInterno(context, uri, "pdf")
-            appuntiViewModel.inserisciNota(
-                Nota(
-                    materiaId = materiaId,
-                    tipo = TipoNota.PDF,
-                    titolo = "PDF ${formattaData(System.currentTimeMillis())}",
-                    percorsoFile = path
+            scope.launch {
+                val path = FileStorageHelper.copiaUriInInterno(context, uri, "pdf")
+                appuntiViewModel.inserisciNota(
+                    Nota(
+                        materiaId = materiaId,
+                        tipo = TipoNota.PDF,
+                        titolo = "PDF ${formattaData(System.currentTimeMillis())}",
+                        percorsoFile = path
+                    )
                 )
-            )
+            }
         }
     }
 
@@ -130,9 +136,11 @@ fun MateriaAppuntiScreen(
         contract = ActivityResultContracts.RequestPermission()
     ) { concesso: Boolean ->
         if (concesso) {
-            val (file, uri) = FileStorageHelper.creaFilePerFotocamera(context)
-            fileFotoInAttesa = file
-            cameraLauncher.launch(uri)
+            scope.launch {
+                val (file, uri) = FileStorageHelper.creaFilePerFotocamera(context)
+                fileFotoInAttesa = file
+                cameraLauncher.launch(uri)
+            }
         }
     }
 
@@ -142,9 +150,11 @@ fun MateriaAppuntiScreen(
         ) == PackageManager.PERMISSION_GRANTED
 
         if (giaConcesso) {
-            val (file, uri) = FileStorageHelper.creaFilePerFotocamera(context)
-            fileFotoInAttesa = file
-            cameraLauncher.launch(uri)
+            scope.launch {
+                val (file, uri) = FileStorageHelper.creaFilePerFotocamera(context)
+                fileFotoInAttesa = file
+                cameraLauncher.launch(uri)
+            }
         } else {
             cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
         }

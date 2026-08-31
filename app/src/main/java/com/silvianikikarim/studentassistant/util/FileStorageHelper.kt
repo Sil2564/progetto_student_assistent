@@ -3,6 +3,8 @@ package com.silvianikikarim.studentassistant.util
 import android.content.Context
 import android.net.Uri
 import androidx.core.content.FileProvider
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
 import java.util.UUID
@@ -12,6 +14,11 @@ import java.util.UUID
  * (context.filesDir/appunti_files/...), così i file sopravvivono a revoche di permessi
  * o alla cancellazione dell'originale in galleria. Nel database salviamo solo il path
  * assoluto risultante.
+ *
+ * Tutte le funzioni sono `suspend` e spostano esplicitamente il lavoro su
+ * Dispatchers.IO: creare cartelle, aprire stream e copiare byte è I/O bloccante,
+ * quindi non deve mai girare sul thread che le chiama (es. Main, nei callback
+ * dei launcher di Compose).
  */
 object FileStorageHelper {
 
@@ -30,17 +37,18 @@ object FileStorageHelper {
      * Copia il contenuto di un content:// Uri (scelto da galleria o dal picker PDF)
      * in un nuovo file interno. Ritorna il path assoluto del file salvato.
      */
-    fun copiaUriInInterno(context: Context, sourceUri: Uri, estensione: String): String {
-        val nomeFile = "${UUID.randomUUID()}.$estensione"
-        val destFile = File(getCartellaAppunti(context), nomeFile)
+    suspend fun copiaUriInInterno(context: Context, sourceUri: Uri, estensione: String): String =
+        withContext(Dispatchers.IO) {
+            val nomeFile = "${UUID.randomUUID()}.$estensione"
+            val destFile = File(getCartellaAppunti(context), nomeFile)
 
-        context.contentResolver.openInputStream(sourceUri)?.use { input ->
-            FileOutputStream(destFile).use { output ->
-                input.copyTo(output)
+            context.contentResolver.openInputStream(sourceUri)?.use { input ->
+                FileOutputStream(destFile).use { output ->
+                    input.copyTo(output)
+                }
             }
+            destFile.absolutePath
         }
-        return destFile.absolutePath
-    }
 
     /**
      * Crea un file vuoto destinato alla foto scattata con la fotocamera e ritorna:
@@ -48,16 +56,18 @@ object FileStorageHelper {
      * - il suo content:// Uri, ottenuto tramite FileProvider, da passare a
      *   ActivityResultContracts.TakePicture() come destinazione dello scatto.
      */
-    fun creaFilePerFotocamera(context: Context): Pair<File, Uri> {
-        val nomeFile = "${UUID.randomUUID()}.jpg"
-        val file = File(getCartellaAppunti(context), nomeFile)
-        val uri = FileProvider.getUriForFile(context, AUTHORITY, file)
-        return file to uri
-    }
+    suspend fun creaFilePerFotocamera(context: Context): Pair<File, Uri> =
+        withContext(Dispatchers.IO) {
+            val nomeFile = "${UUID.randomUUID()}.jpg"
+            val file = File(getCartellaAppunti(context), nomeFile)
+            val uri = FileProvider.getUriForFile(context, AUTHORITY, file)
+            file to uri
+        }
 
     /**
      * Ritorna un content:// Uri (tramite FileProvider) per un file già salvato internamente,
-     * utile per aprire un PDF con un'app esterna (Intent.ACTION_VIEW).
+     * utile per aprire un PDF con un'app esterna (Intent.ACTION_VIEW). Non fa I/O
+     * (solo costruzione dell'Uri), quindi resta una funzione normale, non suspend.
      */
     fun getUriPerFile(context: Context, file: File): Uri {
         return FileProvider.getUriForFile(context, AUTHORITY, file)
