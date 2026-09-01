@@ -18,8 +18,8 @@ import androidx.room.TypeConverters
  * appunti sia per il menu a tendina in Andamento.
  */
 @Database(
-    entities = [Materia::class, Nota::class, Voto::class],
-    version = 3,
+    entities = [Materia::class, Nota::class, Voto::class, EventoStudio::class],
+    version = 4,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -28,6 +28,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun materiaDao(): MateriaDao
     abstract fun notaDao(): NotaDao
     abstract fun votoDao(): VotoDao
+    abstract fun eventoStudioDao(): EventoStudioDao
 
     companion object {
         @Volatile

@@ -11,6 +11,7 @@ import com.silvianikikarim.studentassistant.viewmodel.AppuntiViewModel
 import com.silvianikikarim.studentassistant.viewmodel.VotoViewModel
 import com.silvianikikarim.studentassistant.viewmodel.SettingsViewModel
 import com.silvianikikarim.studentassistant.viewmodel.ConsigliViewModel
+import com.silvianikikarim.studentassistant.viewmodel.CalendarioStudioViewModel
 import com.silvianikikarim.studentassistant.ui.settings.SettingsScreen
 
 /**
@@ -23,7 +24,8 @@ import com.silvianikikarim.studentassistant.ui.settings.SettingsScreen
 fun AppNavigation(
     votoViewModel: VotoViewModel,
     appuntiViewModel: AppuntiViewModel,
-    consigliViewModel: ConsigliViewModel
+    consigliViewModel: ConsigliViewModel,
+    calendarioStudioViewModel: CalendarioStudioViewModel
 ) {
     // Inizializziamo il controller della navigazione
     val navController = rememberNavController()
@@ -69,7 +71,7 @@ fun AppNavigation(
 
         // ---- SEZIONE CALENDARIO ----
         composable(Routes.CALENDARIO_STUDIO) {
-            CalendarioStudioScreen(navController)
+            CalendarioStudioScreen(navController, calendarioStudioViewModel)
         }
 
         composable(Routes.ANDAMENTO) {

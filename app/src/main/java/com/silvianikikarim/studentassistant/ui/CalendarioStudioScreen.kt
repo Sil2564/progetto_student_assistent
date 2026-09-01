@@ -11,6 +11,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Celebration
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -23,46 +24,57 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.silvianikikarim.studentassistant.model.EventoStudio
 import com.silvianikikarim.studentassistant.ui.theme.BrandRed
 import com.silvianikikarim.studentassistant.ui.theme.SurfaceSoft
+import com.silvianikikarim.studentassistant.viewmodel.CalendarioStudioViewModel
 import java.time.DayOfWeek
+import java.time.Instant
 import java.time.LocalDate
 import java.time.YearMonth
+import java.time.ZoneId
 import java.time.format.TextStyle
 import java.util.Locale
-import java.util.UUID
 
-private data class StudyEvent(
-    val id: String,
-    val date: LocalDate,
-    val title: String,
-    val start: String,   // "13:00"
-    val end: String,     // "18:00"
-    val type: String     // "Studio", "Esame", "Ripasso", ecc.
-)
+/** Converte una data locale nel timestamp (mezzanotte, fuso orario del device) salvato su Room. */
+private fun LocalDate.toEpochMillis(): Long =
+    atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+
+/** Converte il timestamp salvato su Room nella data locale usata per raggruppare/visualizzare. */
+private fun Long.toLocalDate(): LocalDate =
+    Instant.ofEpochMilli(this).atZone(ZoneId.systemDefault()).toLocalDate()
 
 /**
  * CalendarioStudioScreen
  * Questa schermata gestisce la visualizzazione del calendario e degli eventi di studio.
  * Implementa una logica custom per disegnare la griglia dei giorni e filtrare gli eventi.
+ *
+ * Gli eventi (EventoStudio) sono persistiti su Room tramite CalendarioStudioViewModel,
+ * quindi restano salvati anche chiudendo l'app. Le festività pubbliche italiane vengono
+ * invece scaricate da un'API remota (Nager.Date) e mostrate come informazione di sola
+ * lettura sovrapposta al calendario personale dell'utente.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CalendarioStudioScreen(navController: NavController) {
+fun CalendarioStudioScreen(
+    navController: NavController,
+    viewModel: CalendarioStudioViewModel
+) {
     // Variabili di stato (State) per memorizzare il mese correntemente visualizzato e il giorno selezionato.
     // Usiamo "remember" in modo che Compose non resetti queste variabili ogni volta che la UI viene ridisegnata (recomposition).
     var shownMonth by remember { mutableStateOf(YearMonth.now()) }
     var selectedDate by remember { mutableStateOf(LocalDate.now()) }
 
-    // ---- EVENTI (ORA MUTABILI) ----
-    var allEvents by remember {
-        mutableStateOf(
-            listOf(
-                StudyEvent(UUID.randomUUID().toString(), LocalDate.now(), "Studio Sistemi Mobili", "13:00", "18:00", "Studio"),
-                StudyEvent(UUID.randomUUID().toString(), LocalDate.now().plusDays(1), "Ripasso Reti", "10:00", "12:00", "Ripasso"),
-                StudyEvent(UUID.randomUUID().toString(), LocalDate.now().plusDays(3), "Esame Analisi", "09:00", "11:00", "Esame")
-            )
-        )
+    // ---- EVENTI DELL'UTENTE (Room, persistenti) ----
+    val allEvents by viewModel.eventi.collectAsState()
+
+    // ---- FESTIVITÀ (API remota, sola lettura) ----
+    val festivita by viewModel.festivita.collectAsState()
+
+    // Ogni volta che l'utente cambia anno solare scorrendo i mesi, scarichiamo le
+    // festività di quell'anno (il ViewModel evita chiamate ripetute per anni già caricati).
+    LaunchedEffect(shownMonth.year) {
+        viewModel.caricaFestivitaAnno(shownMonth.year)
     }
 
     // ---- DIALOG STATE ----
@@ -71,19 +83,21 @@ fun CalendarioStudioScreen(navController: NavController) {
 
     // Raggruppiamo tutti gli eventi per data, così è più veloce cercare se un giorno specifico ha degli eventi.
     // L'utilizzo di "remember(allEvents)" fa sì che il raggruppamento venga ricalcolato solo se la lista eventi cambia.
-    val eventsByDate = remember(allEvents) { allEvents.groupBy { it.date } }
+    val eventsByDate = remember(allEvents) { allEvents.groupBy { it.data.toLocalDate() } }
 
     val monthEventsCount = remember(shownMonth, allEvents) {
-        allEvents.count { YearMonth.from(it.date) == shownMonth }
+        allEvents.count { YearMonth.from(it.data.toLocalDate()) == shownMonth }
     }
 
     // Estrae gli eventi relativi esclusivamente al giorno selezionato e li ordina per orario di inizio.
     val selectedEvents = remember(selectedDate, eventsByDate) {
-        (eventsByDate[selectedDate] ?: emptyList()).sortedBy { it.start }
+        (eventsByDate[selectedDate] ?: emptyList()).sortedBy { it.oraInizio }
     }
 
+    val festivitaSelezionata = festivita[selectedDate]
+
     // ---- POPUP DETTAGLI EVENTO ----
-    var selectedEventForPopup by remember { mutableStateOf<StudyEvent?>(null) }
+    var selectedEventForPopup by remember { mutableStateOf<EventoStudio?>(null) }
 
     // ---- DIALOG UI ----
     if (showAddDialog) {
@@ -92,15 +106,16 @@ fun CalendarioStudioScreen(navController: NavController) {
             brandColor = BrandRed,
             onDismiss = { showAddDialog = false },
             onSave = { title, type, start, end ->
-                val newEv = StudyEvent(
-                    id = UUID.randomUUID().toString(),
-                    date = selectedDate,
-                    title = title.trim(),
-                    start = start,
-                    end = end,
-                    type = type
+                viewModel.aggiungiEvento(
+                    EventoStudio(
+                        titolo = title.trim(),
+                        materia = "",
+                        data = selectedDate.toEpochMillis(),
+                        oraInizio = start,
+                        oraFine = end,
+                        tipo = type
+                    )
                 )
-                allEvents = allEvents + newEv
                 showAddDialog = false
             }
         )
@@ -176,6 +191,7 @@ fun CalendarioStudioScreen(navController: NavController) {
                         month = shownMonth,
                         selectedDate = selectedDate,
                         hasEvents = { date -> eventsByDate.containsKey(date) },
+                        isFestivita = { date -> festivita.containsKey(date) },
                         onDateClick = { clicked ->
                             selectedDate = clicked
                             shownMonth = YearMonth.from(clicked)
@@ -196,6 +212,13 @@ fun CalendarioStudioScreen(navController: NavController) {
             )
 
             Spacer(Modifier.height(10.dp))
+
+            // Se il giorno selezionato è una festività, lo mostriamo come banner informativo
+            // (sola lettura, non è un evento dell'utente e non può essere modificato/eliminato).
+            if (festivitaSelezionata != null) {
+                FestivitaBanner(nome = festivitaSelezionata)
+                Spacer(Modifier.height(10.dp))
+            }
 
             // Logica per mostrare o la lista degli eventi o un messaggio vuoto
             if (selectedEvents.isEmpty()) {
@@ -222,8 +245,9 @@ fun CalendarioStudioScreen(navController: NavController) {
     // ---- POPUP DETTAGLI STUDIO EVENT ----
     if (selectedEventForPopup != null) {
         val ev = selectedEventForPopup!!
-        val duration = calculateDuration(ev.start, ev.end)
-        val tip = when (ev.type) {
+        val duration = calculateDuration(ev.oraInizio, ev.oraFine)
+        val evDate = ev.data.toLocalDate()
+        val tip = when (ev.tipo) {
             "Studio" -> "Consiglio: Mantieni alta la concentrazione alternando sessioni di 45/50 min con pause regolari (Tecnica Pomodoro)."
             "Ripasso" -> "Consiglio: Focalizzati su riassunti, schemi e simulazione di domande d'esame per fissare i concetti."
             "Esame" -> "Consiglio: Arriva con anticipo, assicurati di avere con te documento/badge e affrontalo con lucidità!"
@@ -239,14 +263,14 @@ fun CalendarioStudioScreen(navController: NavController) {
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
-                        text = ev.title,
+                        text = ev.titolo,
                         fontWeight = FontWeight.Bold,
                         style = MaterialTheme.typography.titleLarge,
                         modifier = Modifier.weight(1f)
                     )
                     AssistChip(
                         onClick = {},
-                        label = { Text(ev.type, fontWeight = FontWeight.SemiBold) },
+                        label = { Text(ev.tipo, fontWeight = FontWeight.SemiBold) },
                         colors = AssistChipDefaults.assistChipColors(
                             containerColor = BrandRed.copy(alpha = 0.12f),
                             labelColor = BrandRed
@@ -258,11 +282,11 @@ fun CalendarioStudioScreen(navController: NavController) {
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text(
-                        text = "📅 Data: ${ev.date.dayOfMonth} ${ev.date.month.getDisplayName(TextStyle.FULL, Locale.ITALIAN).replaceFirstChar { it.uppercase() }} ${ev.date.year}",
+                        text = "📅 Data: ${evDate.dayOfMonth} ${evDate.month.getDisplayName(TextStyle.FULL, Locale.ITALIAN).replaceFirstChar { it.uppercase() }} ${evDate.year}",
                         style = MaterialTheme.typography.bodyMedium
                     )
                     Text(
-                        text = "⏰ Orario: ${ev.start} - ${ev.end} ($duration)",
+                        text = "⏰ Orario: ${ev.oraInizio} - ${ev.oraFine} ($duration)",
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Medium
                     )
@@ -300,7 +324,7 @@ fun CalendarioStudioScreen(navController: NavController) {
             dismissButton = {
                 TextButton(
                     onClick = {
-                        allEvents = allEvents.filter { it.id != ev.id }
+                        viewModel.eliminaEvento(ev)
                         selectedEventForPopup = null
                     }
                 ) {
@@ -486,6 +510,7 @@ private fun MonthGrid(
     month: YearMonth,
     selectedDate: LocalDate,
     hasEvents: (LocalDate) -> Boolean,
+    isFestivita: (LocalDate) -> Boolean,
     onDateClick: (LocalDate) -> Unit
 ) {
     val days = remember(month) { buildMonthGridDays(month) }
@@ -498,6 +523,7 @@ private fun MonthGrid(
                         inMonth = YearMonth.from(day) == month,
                         selected = day == selectedDate,
                         showDot = hasEvents(day),
+                        isFestivita = isFestivita(day),
                         onClick = { onDateClick(day) }
                     )
                 }
@@ -512,14 +538,20 @@ private fun DayCell(
     inMonth: Boolean,
     selected: Boolean,
     showDot: Boolean,
+    isFestivita: Boolean,
     onClick: () -> Unit
 ) {
     val dayColor = when {
         selected -> Color.White
+        isFestivita && inMonth -> BrandRed
         inMonth -> MaterialTheme.colorScheme.onSurface
         else -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.45f)
     }
-    val bg = if (selected) BrandRed else Color.Transparent
+    val bg = when {
+        selected -> BrandRed
+        isFestivita && inMonth -> BrandRed.copy(alpha = 0.10f)
+        else -> Color.Transparent
+    }
 
     Box(
         modifier = Modifier
@@ -534,7 +566,7 @@ private fun DayCell(
                 text = day.dayOfMonth.toString(),
                 color = dayColor,
                 style = MaterialTheme.typography.bodySmall,
-                fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal
+                fontWeight = if (selected || isFestivita) FontWeight.SemiBold else FontWeight.Normal
             )
             if (showDot) {
                 Spacer(Modifier.height(3.dp))
@@ -549,8 +581,32 @@ private fun DayCell(
     }
 }
 
+/** Banner di sola lettura mostrato quando il giorno selezionato è una festività pubblica. */
 @Composable
-private fun EventRowCard(event: StudyEvent, onClick: () -> Unit) {
+private fun FestivitaBanner(nome: String) {
+    Card(
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(containerColor = BrandRed.copy(alpha = 0.08f)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier.padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(Icons.Filled.Celebration, contentDescription = null, tint = BrandRed)
+            Spacer(Modifier.width(10.dp))
+            Column {
+                Text("Festività", style = MaterialTheme.typography.labelSmall, color = BrandRed)
+                Text(nome, fontWeight = FontWeight.SemiBold)
+            }
+        }
+    }
+}
+
+@Composable
+private fun EventRowCard(event: EventoStudio, onClick: () -> Unit) {
+    val eventDate = event.data.toLocalDate()
     Card(
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = SurfaceSoft),
@@ -572,12 +628,12 @@ private fun EventRowCard(event: StudyEvent, onClick: () -> Unit) {
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = event.date.dayOfMonth.toString(),
+                    text = eventDate.dayOfMonth.toString(),
                     color = BrandRed,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = event.date.dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.ITALIAN)
+                    text = eventDate.dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.ITALIAN)
                         .replaceFirstChar { it.uppercase() },
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -587,10 +643,10 @@ private fun EventRowCard(event: StudyEvent, onClick: () -> Unit) {
             Spacer(Modifier.width(12.dp))
 
             Column(Modifier.weight(1f)) {
-                Text(event.title, fontWeight = FontWeight.SemiBold)
+                Text(event.titolo, fontWeight = FontWeight.SemiBold)
                 Spacer(Modifier.height(4.dp))
                 Text(
-                    text = "${event.start} - ${event.end}",
+                    text = "${event.oraInizio} - ${event.oraFine}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -598,7 +654,7 @@ private fun EventRowCard(event: StudyEvent, onClick: () -> Unit) {
 
             AssistChip(
                 onClick = onClick,
-                label = { Text(event.type) },
+                label = { Text(event.tipo) },
                 colors = AssistChipDefaults.assistChipColors(
                     containerColor = BrandRed.copy(alpha = 0.10f),
                     labelColor = BrandRed

@@ -11,7 +11,10 @@ import com.silvianikikarim.studentassistant.repository.AppuntiRepository
 import com.silvianikikarim.studentassistant.repository.MateriaRepository
 import com.silvianikikarim.studentassistant.repository.VotoRepository
 import com.silvianikikarim.studentassistant.repository.ConsigliRepository
+import com.silvianikikarim.studentassistant.repository.CalendarioStudioRepository
+import com.silvianikikarim.studentassistant.repository.FestivitaRepository
 import com.silvianikikarim.studentassistant.network.ZenQuotesApi
+import com.silvianikikarim.studentassistant.network.HolidayApi
 import com.silvianikikarim.studentassistant.util.FrasedelGiornoCache
 import com.silvianikikarim.studentassistant.ui.*
 import com.silvianikikarim.studentassistant.ui.theme.StudentAssistantTheme
@@ -21,6 +24,8 @@ import com.silvianikikarim.studentassistant.viewmodel.VotoViewModel
 import com.silvianikikarim.studentassistant.viewmodel.VotoViewModelFactory
 import com.silvianikikarim.studentassistant.viewmodel.ConsigliViewModel
 import com.silvianikikarim.studentassistant.viewmodel.ConsigliViewModelFactory
+import com.silvianikikarim.studentassistant.viewmodel.CalendarioStudioViewModel
+import com.silvianikikarim.studentassistant.viewmodel.CalendarioStudioViewModelFactory
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -62,6 +67,15 @@ class MainActivity : ComponentActivity() {
         )
         val consigliFactory = ConsigliViewModelFactory(consigliRepository)
 
+        // Calendario Studio: eventi salvati su Room (persistenti) + festività
+        // pubbliche italiane scaricate da Nager.Date (2ª chiamata API remota).
+        val calendarioStudioRepository = CalendarioStudioRepository(appDatabase.eventoStudioDao())
+        val festivitaRepository = FestivitaRepository(HolidayApi.create())
+        val calendarioStudioFactory = CalendarioStudioViewModelFactory(
+            eventiRepository = calendarioStudioRepository,
+            festivitaRepository = festivitaRepository
+        )
+
         val settingsDataStore = SettingsDataStore(applicationContext)
 
         setContent {
@@ -70,10 +84,13 @@ class MainActivity : ComponentActivity() {
                 val votoViewModel: VotoViewModel = viewModel(factory = votoFactory)
                 val appuntiViewModel: AppuntiViewModel = viewModel(factory = appuntiFactory)
                 val consigliViewModel: ConsigliViewModel = viewModel(factory = consigliFactory)
+                val calendarioStudioViewModel: CalendarioStudioViewModel =
+                    viewModel(factory = calendarioStudioFactory)
                 AppNavigation(
                     votoViewModel = votoViewModel,
                     appuntiViewModel = appuntiViewModel,
-                    consigliViewModel = consigliViewModel
+                    consigliViewModel = consigliViewModel,
+                    calendarioStudioViewModel = calendarioStudioViewModel
                 )
             }
         }
