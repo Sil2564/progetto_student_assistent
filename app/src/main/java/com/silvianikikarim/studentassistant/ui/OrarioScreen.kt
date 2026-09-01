@@ -45,8 +45,7 @@ private data class LessonEvent(
 
 /**
  * OrarioScreen
- * Mostra l'orario delle lezioni sotto forma di calendario mensile.
- * Riutilizza la stessa logica di UI del Calendario Studio per massima coerenza.
+ * Mostra l'orario delle lezioni universitarie in formato calendario mensile.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -74,7 +73,7 @@ fun OrarioScreen(navController: NavController, modifier: Modifier = Modifier) {
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = BrandRed, // Sostituito il viola con il rosso del brand!
+                    containerColor = BrandRed,
                     titleContentColor = Color.White
                 )
             )

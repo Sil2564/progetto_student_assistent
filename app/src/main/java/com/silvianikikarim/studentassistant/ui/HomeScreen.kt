@@ -49,15 +49,14 @@ fun HomeScreen(navController: NavController) {
                     )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFFAF2A2D), // viola simile UniBo-style
+                    containerColor = Color(0xFFAF2A2D),
                     titleContentColor = Color.White
                 )
             )
         }
     ) { padding ->
 
-        // LazyVerticalGrid è perfetto per creare griglie flessibili (tipo quelle di Instagram o dashboard).
-        // Fixed(2) impone esattamente 2 colonne di larghezza uguale.
+        // Griglia a 2 colonne fisse per le sezioni principali della dashboard
         LazyVerticalGrid(
             columns = GridCells.Fixed(2),
             modifier = Modifier
@@ -77,7 +76,7 @@ fun HomeScreen(navController: NavController) {
 }
 
 /**
- * Singolo "bottone" a forma di scheda (Card) usato nella griglia.
+ * Card quadrata per la griglia della Home.
  */
 @Composable
 fun HomeCard(
@@ -85,13 +84,10 @@ fun HomeCard(
     onClick: () -> Unit
 ) {
     Card(
-        // aspectRatio(1f) costringe la Card a essere perfettamente quadrata (rapporto larghezza:altezza = 1:1)
         modifier = Modifier
             .fillMaxWidth()
             .aspectRatio(1f)
             .clickable { onClick() },
-        // Utilizziamo surfaceVariant perché offre un contrasto perfetto sia in Dark che in Light mode,
-        // garantendo un'ottima leggibilità del testo al suo interno senza sforzare la vista.
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant
         ),

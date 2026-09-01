@@ -42,17 +42,10 @@ fun SettingsScreen(
     val darkMode by settingsViewModel.darkMode.collectAsState(initial = false)
     val voti by votoViewModel.votiConMateria.collectAsState()
     
-    // ---- CALCOLO DINAMICO DELLE STATISTICHE ----
-    // Esami dati: conta semplicemente quanti elementi ci sono nella lista dei voti.
+    // Calcolo delle statistiche riassuntive
     val esamiDati = voti.size
-    
-    // Media voti: calcola la media matematica dei voti presenti. Se la lista è vuota (0 esami), restituisce 0.0.
     val mediaVoti = if (voti.isNotEmpty()) voti.map { it.voto.voto }.average() else 0.0
-    // Formattiamo il numero per avere una sola cifra decimale, garantendo un layout pulito (es. 26.5 invece di 26.5432).
     val mediaFormat = String.format(Locale.US, "%.1f", mediaVoti)
-    
-    // Crediti: poiché il modello dati (Database) attuale non prevede un campo CFU, 
-    // moltiplichiamo in automatico il numero di esami per 6 (una stima standard) in modo da testare l'UI.
     val crediti = voti.size * 6
 
     Scaffold(

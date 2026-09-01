@@ -15,10 +15,8 @@ import com.silvianikikarim.studentassistant.viewmodel.CalendarioStudioViewModel
 import com.silvianikikarim.studentassistant.ui.settings.SettingsScreen
 
 /**
- * AppNavigation
- * "cuore"  app (il router).
- * Jetpack Compose utilizza il NavController per gestire lo spostamento tra le schermate
- * senza dover creare multiple Activity. Ogni schermata è un "composable" a cui assegniamo una rotta (stringa).
+ * Configurazione della navigazione dell'applicazione (NavHost).
+ * Associa le rotte ai rispettivi Composable e fornisce i ViewModel necessari.
  */
 @Composable
 fun AppNavigation(
