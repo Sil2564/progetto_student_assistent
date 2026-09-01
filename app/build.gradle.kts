@@ -44,6 +44,12 @@ android {
 
 kapt {
     correctErrorTypes = true
+    arguments {
+        // Salva una "fotografia" JSON dello schema Room ad ogni versione,
+        // in app/schemas/. Serve per scrivere vere Migration in futuro
+        // invece di ricreare il database da zero ad ogni cambio di schema.
+        arg("room.schemaLocation", "$projectDir/schemas")
+    }
 }
 
 dependencies {

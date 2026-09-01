@@ -1,0 +1,251 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 4,
+    "identityHash": "b84de70ea8e78195e1145f05e8f8004b",
+    "entities": [
+      {
+        "tableName": "materie",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `nome` TEXT NOT NULL, `anno` INTEGER NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "nome",
+            "columnName": "nome",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "anno",
+            "columnName": "anno",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "note",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `materiaId` INTEGER NOT NULL, `tipo` TEXT NOT NULL, `titolo` TEXT NOT NULL, `testo` TEXT, `percorsoFile` TEXT, `dataCreazione` INTEGER NOT NULL, `dataModifica` INTEGER NOT NULL, FOREIGN KEY(`materiaId`) REFERENCES `materie`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "materiaId",
+            "columnName": "materiaId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tipo",
+            "columnName": "tipo",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "titolo",
+            "columnName": "titolo",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "testo",
+            "columnName": "testo",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "percorsoFile",
+            "columnName": "percorsoFile",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "dataCreazione",
+            "columnName": "dataCreazione",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "dataModifica",
+            "columnName": "dataModifica",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_note_materiaId",
+            "unique": false,
+            "columnNames": [
+              "materiaId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_note_materiaId` ON `${TABLE_NAME}` (`materiaId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "materie",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "materiaId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "voti",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `materiaId` INTEGER NOT NULL, `voto` INTEGER NOT NULL, `data` TEXT NOT NULL, `descrizione` TEXT NOT NULL, `note` TEXT NOT NULL, FOREIGN KEY(`materiaId`) REFERENCES `materie`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "materiaId",
+            "columnName": "materiaId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "voto",
+            "columnName": "voto",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "data",
+            "columnName": "data",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "descrizione",
+            "columnName": "descrizione",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "note",
+            "columnName": "note",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_voti_materiaId",
+            "unique": false,
+            "columnNames": [
+              "materiaId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_voti_materiaId` ON `${TABLE_NAME}` (`materiaId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "materie",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "materiaId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "eventi_studio",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `titolo` TEXT NOT NULL, `materia` TEXT NOT NULL, `data` INTEGER NOT NULL, `oraInizio` TEXT NOT NULL, `oraFine` TEXT NOT NULL, `tipo` TEXT NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "titolo",
+            "columnName": "titolo",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "materia",
+            "columnName": "materia",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "data",
+            "columnName": "data",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "oraInizio",
+            "columnName": "oraInizio",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "oraFine",
+            "columnName": "oraFine",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tipo",
+            "columnName": "tipo",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        }
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'b84de70ea8e78195e1145f05e8f8004b')"
+    ]
+  }
+}

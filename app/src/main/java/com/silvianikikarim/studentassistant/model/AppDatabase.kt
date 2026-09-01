@@ -20,7 +20,7 @@ import androidx.room.TypeConverters
 @Database(
     entities = [Materia::class, Nota::class, Voto::class, EventoStudio::class],
     version = 4,
-    exportSchema = false
+    exportSchema = true
 )
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
