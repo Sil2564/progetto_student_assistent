@@ -33,6 +33,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -74,6 +75,10 @@ fun MateriaAppuntiScreen(
     // File temporaneo creato prima dello scatto, salvato nel database solo se lo scatto riesce
     var fileFotoInAttesa by remember { mutableStateOf<File?>(null) }
 
+    // Foto già salvata su disco (da galleria o fotocamera) in attesa che l'utente
+    // confermi/modifichi il titolo prima che la nota venga effettivamente creata
+    var fotoInAttesaTitolo by remember { mutableStateOf<PendingFoto?>(null) }
+
     // --- Launcher: galleria (Photo Picker di sistema, nessun permesso richiesto) ---
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
@@ -81,13 +86,9 @@ fun MateriaAppuntiScreen(
         if (uri != null) {
             scope.launch {
                 val path = FileStorageHelper.copiaUriInInterno(context, uri, "jpg")
-                appuntiViewModel.inserisciNota(
-                    Nota(
-                        materiaId = materiaId,
-                        tipo = TipoNota.IMMAGINE,
-                        titolo = "Immagine ${formattaData(System.currentTimeMillis())}",
-                        percorsoFile = path
-                    )
+                fotoInAttesaTitolo = PendingFoto(
+                    percorsoFile = path,
+                    titoloSuggerito = "Immagine ${formattaData(System.currentTimeMillis())}"
                 )
             }
         }
@@ -118,13 +119,9 @@ fun MateriaAppuntiScreen(
     ) { successo: Boolean ->
         val file = fileFotoInAttesa
         if (successo && file != null) {
-            appuntiViewModel.inserisciNota(
-                Nota(
-                    materiaId = materiaId,
-                    tipo = TipoNota.IMMAGINE,
-                    titolo = "Foto ${formattaData(System.currentTimeMillis())}",
-                    percorsoFile = file.absolutePath
-                )
+            fotoInAttesaTitolo = PendingFoto(
+                percorsoFile = file.absolutePath,
+                titoloSuggerito = "Foto ${formattaData(System.currentTimeMillis())}"
             )
         } else {
             file?.delete() // scatto annullato: rimuovo il file vuoto
@@ -251,6 +248,28 @@ fun MateriaAppuntiScreen(
         )
     }
 
+    fotoInAttesaTitolo?.let { pending ->
+        DialogTitoloFoto(
+            titoloIniziale = pending.titoloSuggerito,
+            percorsoFile = pending.percorsoFile,
+            onConferma = { titoloScelto ->
+                appuntiViewModel.inserisciNota(
+                    Nota(
+                        materiaId = materiaId,
+                        tipo = TipoNota.IMMAGINE,
+                        titolo = titoloScelto.ifBlank { pending.titoloSuggerito },
+                        percorsoFile = pending.percorsoFile
+                    )
+                )
+                fotoInAttesaTitolo = null
+            },
+            onAnnulla = {
+                File(pending.percorsoFile).delete() // l'utente ha annullato: rimuovo il file
+                fotoInAttesaTitolo = null
+            }
+        )
+    }
+
     notaSelezionataPerMenu?.let { nota ->
         MenuContestualeNota(
             nota = nota,
@@ -309,14 +328,25 @@ private fun NotaRow(
                 TipoNota.PDF -> "PDF"
             }
 
-            Box(
-                modifier = Modifier
-                    .size(44.dp)
-                    .clip(RoundedCornerShape(14.dp))
-                    .background(BrandRed.copy(alpha = 0.10f)),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(icona, contentDescription = null, tint = BrandRed)
+            if (nota.tipo == TipoNota.IMMAGINE && nota.percorsoFile != null) {
+                AsyncImage(
+                    model = File(nota.percorsoFile),
+                    contentDescription = nota.titolo,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .size(44.dp)
+                        .clip(RoundedCornerShape(14.dp))
+                )
+            } else {
+                Box(
+                    modifier = Modifier
+                        .size(44.dp)
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(BrandRed.copy(alpha = 0.10f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(icona, contentDescription = null, tint = BrandRed)
+                }
             }
 
             Spacer(Modifier.width(12.dp))
@@ -468,4 +498,61 @@ private fun apriPdfEsterno(context: Context, nota: Nota) {
 private fun formattaData(timestampMillis: Long): String {
     val formatter = SimpleDateFormat("dd/MM HH:mm", Locale.ITALY)
     return formatter.format(Date(timestampMillis))
+}
+
+/**
+ * Foto già copiata su disco interno, in attesa che l'utente confermi il titolo
+ * prima che venga effettivamente creata la [Nota] corrispondente.
+ */
+private data class PendingFoto(
+    val percorsoFile: String,
+    val titoloSuggerito: String
+)
+
+/**
+ * Dialog mostrato subito dopo aver scattato/scelto una foto: mostra l'anteprima
+ * e permette di dare un titolo personalizzato prima di salvare l'appunto.
+ */
+@Composable
+private fun DialogTitoloFoto(
+    titoloIniziale: String,
+    percorsoFile: String,
+    onConferma: (String) -> Unit,
+    onAnnulla: () -> Unit
+) {
+    var titolo by remember { mutableStateOf(titoloIniziale) }
+
+    AlertDialog(
+        onDismissRequest = onAnnulla,
+        title = { Text("Titolo della foto") },
+        text = {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                AsyncImage(
+                    model = File(percorsoFile),
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(160.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                )
+                Spacer(Modifier.height(16.dp))
+                OutlinedTextField(
+                    value = titolo,
+                    onValueChange = { titolo = it },
+                    label = { Text("Titolo") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = { onConferma(titolo) }) {
+                Text("Salva", color = BrandRed)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onAnnulla) { Text("Annulla") }
+        }
+    )
 }
