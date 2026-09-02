@@ -399,27 +399,47 @@ private fun generateFakeLessons(month: YearMonth): List<LessonEvent> {
         if (isFirstSemester) {
             when (current.dayOfWeek) {
                 DayOfWeek.MONDAY -> {
-                    events.add(LessonEvent(UUID.randomUUID().toString(), current, "Algoritmi e Strutture Dati", "09:00", "12:00", "Campus Cesena - Aula 2.1", "Prof. Ciancarini"))
-                    events.add(LessonEvent(UUID.randomUUID().toString(), current, "Ingegneria dei Sistemi Web", "14:00", "17:00", "Campus Cesena - Aula 1.4", "Prof. Bellavista"))
+                    events.add(LessonEvent(UUID.randomUUID().toString(), current, "Algoritmi e Strutture Dati", "09:00", "11:00", "Campus Cesena - Aula 2.1", "Prof. Ciancarini"))
+                    events.add(LessonEvent(UUID.randomUUID().toString(), current, "Ingegneria dei Sistemi Web", "11:30", "13:30", "Campus Cesena - Aula 1.4", "Prof. Bellavista"))
+                    events.add(LessonEvent(UUID.randomUUID().toString(), current, "Laboratorio di Sistemi di Rete", "15:00", "18:00", "Campus Cesena - Lab 2", "Prof. Callegati"))
+                }
+                DayOfWeek.TUESDAY -> {
+                    events.add(LessonEvent(UUID.randomUUID().toString(), current, "Laboratorio di Sistemi Embedded e IoT", "14:00", "17:00", "Campus Cesena - Lab 3", "Prof. Campi"))
                 }
                 DayOfWeek.WEDNESDAY -> {
-                    events.add(LessonEvent(UUID.randomUUID().toString(), current, "Laboratorio di Sistemi di Rete", "10:00", "13:00", "Campus Cesena - Aula 3.1", "Prof. Callegati"))
+                    events.add(LessonEvent(UUID.randomUUID().toString(), current, "Algoritmi e Strutture Dati", "09:30", "12:30", "Campus Cesena - Aula 2.1", "Prof. Ciancarini"))
+                    events.add(LessonEvent(UUID.randomUUID().toString(), current, "Laboratorio di Sicurezza dei Sistemi e Privacy", "14:30", "17:30", "Campus Cesena - Lab 1", "Prof. Ferrara"))
                 }
                 DayOfWeek.THURSDAY -> {
-                    events.add(LessonEvent(UUID.randomUUID().toString(), current, "Laboratorio di Sicurezza dei Sistemi e Privacy", "09:00", "11:00", "Campus Cesena - Lab 1", "Prof. Ferrara"))
+                    events.add(LessonEvent(UUID.randomUUID().toString(), current, "Ingegneria dei Sistemi Web", "09:00", "11:00", "Campus Cesena - Aula 1.4", "Prof. Bellavista"))
+                    events.add(LessonEvent(UUID.randomUUID().toString(), current, "Laboratorio di Sistemi di Rete", "11:30", "13:30", "Campus Cesena - Aula 3.1", "Prof. Callegati"))
+                    events.add(LessonEvent(UUID.randomUUID().toString(), current, "Laboratorio di Sicurezza dei Sistemi e Privacy", "16:00", "18:00", "Campus Cesena - Lab 1", "Prof. Ferrara"))
+                }
+                DayOfWeek.FRIDAY -> {
+                    events.add(LessonEvent(UUID.randomUUID().toString(), current, "Laboratorio di Sistemi Embedded e IoT", "10:00", "13:00", "Campus Cesena - Lab 2", "Prof. Campi"))
                 }
                 else -> {}
             }
         } else if (isSecondSemester) {
             when (current.dayOfWeek) {
+                DayOfWeek.MONDAY -> {
+                    events.add(LessonEvent(UUID.randomUUID().toString(), current, "Progettazione e Sviluppo del Software", "09:00", "12:00", "Campus Cesena - Aula 2.2", "Prof. Vitali"))
+                    events.add(LessonEvent(UUID.randomUUID().toString(), current, "Laboratorio di Ottimizzazione e Machine Learning", "14:30", "17:30", "Campus Cesena - Lab 1", "Prof. Boschetti"))
+                }
                 DayOfWeek.TUESDAY -> {
-                    events.add(LessonEvent(UUID.randomUUID().toString(), current, "Laboratorio di Programmazione di Sistemi Mobili", "09:00", "13:00", "Campus Cesena - Lab 3", "Prof. Corradi"))
+                    events.add(LessonEvent(UUID.randomUUID().toString(), current, "Laboratorio di Programmazione di Sistemi Mobili", "09:00", "11:00", "Campus Cesena - Lab 3", "Prof. Corradi"))
+                    events.add(LessonEvent(UUID.randomUUID().toString(), current, "Laboratorio di Piattaforme e Sviluppo Cloud", "11:30", "13:30", "Campus Cesena - Aula 1.4", "Prof. Foschini"))
+                    events.add(LessonEvent(UUID.randomUUID().toString(), current, "Laboratorio di Big Data e Data Analytics", "15:00", "18:00", "Campus Cesena - Aula 1.1", "Prof. Golfarelli"))
                 }
                 DayOfWeek.WEDNESDAY -> {
                     events.add(LessonEvent(UUID.randomUUID().toString(), current, "Progettazione e Sviluppo del Software", "14:00", "17:00", "Campus Cesena - Aula 2.2", "Prof. Vitali"))
                 }
+                DayOfWeek.THURSDAY -> {
+                    events.add(LessonEvent(UUID.randomUUID().toString(), current, "Laboratorio di Programmazione di Sistemi Mobili", "10:00", "13:00", "Campus Cesena - Lab 3", "Prof. Corradi"))
+                    events.add(LessonEvent(UUID.randomUUID().toString(), current, "Laboratorio di Piattaforme e Sviluppo Cloud", "15:00", "18:00", "Campus Cesena - Aula 1.4", "Prof. Foschini"))
+                }
                 DayOfWeek.FRIDAY -> {
-                    events.add(LessonEvent(UUID.randomUUID().toString(), current, "Laboratorio di Big Data, Data Mining e Data Analytics", "09:00", "12:00", "Campus Cesena - Aula 1.1", "Prof. Golfarelli"))
+                    events.add(LessonEvent(UUID.randomUUID().toString(), current, "Laboratorio di Big Data e Data Analytics", "09:30", "12:30", "Campus Cesena - Aula 1.1", "Prof. Golfarelli"))
                 }
                 else -> {}
             }
