@@ -14,4 +14,7 @@ interface EventoStudioDao {
 
     @Delete
     suspend fun deleteEvento(evento: EventoStudio)
+
+    @Query("SELECT COUNT(*) FROM eventi_studio")
+    suspend fun countEventi(): Int
 }

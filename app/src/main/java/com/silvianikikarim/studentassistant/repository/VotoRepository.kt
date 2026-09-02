@@ -67,4 +67,28 @@ class VotoRepository(
             com.silvianikikarim.studentassistant.model.MaterieCorso.tutte
         )
     }
+
+    /**
+     * Inserisce alcuni voti di esempio se il database dei voti è completamente vuoto.
+     */
+    suspend fun seedVotiSeNecessario() {
+        if (votoDao.countVoti() == 0) {
+            val votiIniziali = listOf(
+                Triple("Programmazione", 30, "2026-02-12"),
+                Triple("Basi di Dati", 28, "2026-06-18"),
+                Triple("Reti di Calcolatori e Programmazione di Rete", 27, "2026-07-04"),
+                Triple("Elementi di Architetture degli Elaboratori e Sistemi Operativi", 29, "2026-07-20")
+            )
+            votiIniziali.forEach { (materiaNome, votoVal, dataEsame) ->
+                val materiaId = materiaRepository.getOrCreateMateria(materiaNome, 1)
+                inserisciPerMateria(
+                    materiaId = materiaId,
+                    voto = votoVal,
+                    data = dataEsame,
+                    descrizione = "Esame superato",
+                    note = "Superato al primo appello"
+                )
+            }
+        }
+    }
 }

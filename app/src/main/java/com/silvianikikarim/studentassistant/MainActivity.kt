@@ -41,14 +41,6 @@ class MainActivity : ComponentActivity() {
         val appDatabase = AppDatabase.getDatabase(applicationContext)
         val materiaRepository = MateriaRepository(appDatabase.materiaDao())
 
-        // Tutte le materie del piano di studi (1°, 2° e 3° anno) vengono create
-        // una volta sola all'avvio: da qui in poi Andamento e Appunti le
-        // trovano già pronte, senza che l'utente debba inserirle a mano.
-        // Richiamarlo ad ogni avvio non crea duplicati (vedi getOrCreateMateria).
-        lifecycleScope.launch {
-            materiaRepository.seedMaterieSeNecessario(MaterieCorso.tutte)
-        }
-
         val votoRepository = VotoRepository(
             votoDao = appDatabase.votoDao(),
             materiaRepository = materiaRepository
@@ -67,14 +59,18 @@ class MainActivity : ComponentActivity() {
         )
         val consigliFactory = ConsigliViewModelFactory(consigliRepository)
 
-        // Calendario Studio: eventi salvati su Room (persistenti) + festività
-        // pubbliche italiane scaricate da Nager.Date (2ª chiamata API remota).
         val calendarioStudioRepository = CalendarioStudioRepository(appDatabase.eventoStudioDao())
         val festivitaRepository = FestivitaRepository(HolidayApi.create())
         val calendarioStudioFactory = CalendarioStudioViewModelFactory(
             eventiRepository = calendarioStudioRepository,
             festivitaRepository = festivitaRepository
         )
+
+        lifecycleScope.launch {
+            materiaRepository.seedMaterieSeNecessario(MaterieCorso.tutte)
+            votoRepository.seedVotiSeNecessario()
+            calendarioStudioRepository.seedEventiSeNecessario()
+        }
 
         val settingsDataStore = SettingsDataStore(applicationContext)
 

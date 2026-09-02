@@ -17,4 +17,7 @@ interface VotoDao {
 
     @Query("SELECT * FROM voti WHERE materiaId = :materiaId ORDER BY data DESC")
     fun getVotiByMateria(materiaId: Long): Flow<List<Voto>>
+
+    @Query("SELECT COUNT(*) FROM voti")
+    suspend fun countVoti(): Int
 }
